@@ -1,0 +1,24 @@
+[package]
+name = "nucontrole"
+version = "1.0.0"
+description = "Controle de financas pessoais"
+authors = ["Miguel Vieira"]
+edition = "2021"
+rust-version = "1.77"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+# Somente o tauri, sem nenhuma crate de FFI. A logica financeira toda vive
+# no Python; esta casca apenas escolhe uma porta, sobe o run.py e abre a
+# janela nela. O Python morre junto com o app por um pipe no stdin, nao por
+# Job Object -- ver o comentario em src/main.rs.
+tauri = { version = "2", features = [] }
+
+[profile.release]
+codegen-units = 1
+lto = true
+opt-level = "s"
+panic = "abort"
+strip = true

@@ -1,0 +1,31 @@
+# Dados financeiros - NUNCA versionar
+dados/
+*.db
+*.db-journal
+*.db-wal
+backups/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# Tauri -- artefatos de build. O Cargo.lock FICA versionado (e um binario).
+src-tauri/target/
+src-tauri/gen/schemas/
+node_modules/
+dist/
+
+# Ferramentas de teste
+.playwright-mcp/
+# Somente screenshots soltos na raiz -- os icones do app em
+# src-tauri/icons/ precisam ser versionados.
+/*.png
+
+# Editor / OS
+.vscode/
+.idea/
+Thumbs.db
+desktop.ini

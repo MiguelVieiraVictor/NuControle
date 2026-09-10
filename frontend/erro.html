@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NuControle</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <!-- Estilo embutido de proposito: esta pagina precisa funcionar mesmo se
+       o resto do app estiver quebrado ou incompleto. -->
+  <style>
+    :root {
+      --roxo: #820AD1;
+      --roxo-escuro: #5B0791;
+      --roxo-profundo: #3D0263;
+      --tinta: #1A1523;
+      --tinta-2: #5F586B;
+      --linha: #E8E5EE;
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; }
+    body {
+      display: grid;
+      place-items: center;
+      padding: 32px 20px;
+      font: 14px/1.55 "Segoe UI Variable Display", "Segoe UI", -apple-system,
+            BlinkMacSystemFont, Roboto, Arial, sans-serif;
+      color: var(--tinta);
+      background: linear-gradient(168deg, var(--roxo) 0%, var(--roxo-escuro) 52%, var(--roxo-profundo) 100%);
+    }
+    .caixa {
+      width: 100%;
+      max-width: 620px;
+      padding: 34px 36px 30px;
+      background: #fff;
+      border-radius: 24px;
+      box-shadow: 0 8px 40px rgba(61, 2, 99, .28);
+    }
+    .marca {
+      display: flex; align-items: center; gap: 10px;
+      margin-bottom: 20px;
+      font-size: 12px; font-weight: 700;
+      letter-spacing: .1em; text-transform: uppercase;
+      color: var(--roxo);
+    }
+    .marca span {
+      width: 22px; height: 22px; border-radius: 7px;
+      background: var(--roxo);
+      box-shadow: inset 0 0 0 5px #fff;
+    }
+    h1 { margin: 0 0 10px; font-size: 22px; letter-spacing: -.01em; }
+    p { margin: 0 0 14px; color: var(--tinta-2); }
+    ol { margin: 0 0 6px; padding-left: 22px; color: var(--tinta-2); }
+    li { margin-bottom: 9px; }
+    code {
+      display: inline-block;
+      padding: 2px 7px;
+      font-family: "Cascadia Mono", Consolas, "Courier New", monospace;
+      font-size: 12.5px;
+      color: var(--roxo-escuro);
+      background: #F5EBFE;
+      border-radius: 6px;
+    }
+    pre {
+      margin: 10px 0 0;
+      padding: 13px 15px;
+      overflow-x: auto;
+      font-family: "Cascadia Mono", Consolas, "Courier New", monospace;
+      font-size: 12.5px;
+      color: #fff;
+      background: var(--tinta);
+      border-radius: 12px;
+    }
+    .rodape {
+      margin-top: 24px; padding-top: 18px;
+      border-top: 1px solid var(--linha);
+      font-size: 12.5px; color: #918B9C;
+    }
+    a { color: var(--roxo); }
+  </style>
+</head>
+<body>
+  <main class="caixa">
+    <div class="marca"><span aria-hidden="true"></span> NuControle</div>
+    <h1 id="titulo">Nao foi possivel iniciar</h1>
+    <div id="corpo"></div>
+    <p class="rodape" id="rodape"></p>
+  </main>
+
+<script>
+  // A casca em Rust passa ?motivo=<codigo>. O texto de cada caso vive aqui,
+  // no HTML, e nao no Rust -- assim nao precisa recompilar para ajustar
+  // uma instrucao, e nao ha problema de escape de acentos na URL.
+  const CASOS = {
+    'sem-python': {
+      titulo: 'O Python nao foi encontrado',
+      corpo: `
+        <p>O NuControle usa o Python que esta instalado no seu computador. Nao
+        encontrei nenhum.</p>
+        <ol>
+          <li>Instale o Python 3.11 ou mais novo em
+            <a href="https://www.python.org/downloads/">python.org/downloads</a>.</li>
+          <li>No instalador, marque <strong>"Add python.exe to PATH"</strong> na
+            primeira tela &mdash; sem isso o app continua nao achando.</li>
+          <li>Instale as dependencias e abra o NuControle de novo:</li>
+        </ol>
+        <pre>python -m pip install -r requirements.txt</pre>`,
+    },
+    'sem-dependencias': {
+      titulo: 'Faltam as dependencias do Python',
+      corpo: `
+        <p>O Python foi encontrado, mas o <code>fastapi</code> e o
+        <code>uvicorn</code> nao estao instalados nele.</p>
+        <p>Abra o Prompt de Comando na pasta do NuControle e rode:</p>
+        <pre>python -m pip install -r requirements.txt</pre>
+        <p>Depois feche e abra o NuControle novamente.</p>`,
+    },
+    'sem-projeto': {
+      titulo: 'Arquivos do aplicativo nao encontrados',
+      corpo: `
+        <p>Nao encontrei o <code>run.py</code> nem a pasta <code>backend</code>.
+        Isso normalmente significa que a instalacao ficou incompleta.</p>
+        <p>Reinstale o NuControle. Seus dados nao se perdem: eles ficam no
+        arquivo <code>dados/nucontrole.db</code>, fora da pasta do programa.</p>`,
+    },
+    'sem-servidor': {
+      titulo: 'O servidor nao respondeu',
+      corpo: `
+        <p>O Python foi iniciado, mas nao comecou a responder em 45 segundos.</p>
+        <ol>
+          <li>Feche o NuControle por completo e abra de novo &mdash; pode ter
+            sobrado um processo de uma execucao anterior.</li>
+          <li>Se continuar, rode <code>python run.py</code> direto no Prompt de
+            Comando, na pasta do app: o erro de verdade aparece no terminal.</li>
+        </ol>`,
+    },
+  };
+
+  const motivo = new URLSearchParams(location.search).get('motivo');
+  const caso = CASOS[motivo] || {
+    titulo: 'Nao foi possivel iniciar',
+    corpo: `<p>Ocorreu uma falha inesperada ao subir o servidor local. Rode
+            <code>python run.py</code> no Prompt de Comando, dentro da pasta do
+            app, para ver a mensagem de erro completa.</p>`,
+  };
+
+  document.getElementById('titulo').textContent = caso.titulo;
+  document.getElementById('corpo').innerHTML = caso.corpo;
+  document.getElementById('rodape').textContent =
+    motivo ? `Codigo do problema: ${motivo}` : 'Sem codigo de problema.';
+</script>
+</body>
+</html>
