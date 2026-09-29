@@ -1,251 +1,96 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-BR">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>NuControle</title>
-  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="icon" type="image/png" href="img/icone.png">
   <link rel="stylesheet" href="css/app.css">
 </head>
 <body>
+  <!-- Icones usados pela interface (referenciados com <use href="#i-...">) -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5M5.5 9.5V20h13V9.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+      <symbol id="i-lista" viewBox="0 0 24 24"><path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+      <symbol id="i-cartao" viewBox="0 0 24 24"><rect x="3" y="5.5" width="18" height="13" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M3 10h18M7 15h4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+      <symbol id="i-cofre" viewBox="0 0 24 24"><path d="M5 8.5a7 7 0 0 1 13.2-1.5H20v4h-1.2A7 7 0 0 1 16 15.6V19h-3v-2h-2v2H8v-3.3A7 7 0 0 1 5 8.5Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M10 7.5h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+      <symbol id="i-pessoas" viewBox="0 0 24 24"><circle cx="9" cy="8.5" r="3.2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0M16 5.6a3.2 3.2 0 0 1 0 5.8M17.5 14.3A5.5 5.5 0 0 1 20.5 19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+      <symbol id="i-ajustes" viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h2M10 17h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="16" cy="7" r="2.2" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="8" cy="17" r="2.2" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+      <symbol id="i-mais" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></symbol>
+      <symbol id="i-esq" viewBox="0 0 24 24"><path d="m14.5 6-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+      <symbol id="i-dir" viewBox="0 0 24 24"><path d="m9.5 6 6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+      <symbol id="i-editar" viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16v4ZM13.5 6.5l4 4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></symbol>
+      <symbol id="i-lixo" viewBox="0 0 24 24"><path d="M5 7h14M10 7V5h4v2M7 7l1 12h8l1-12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+      <symbol id="i-pular" viewBox="0 0 24 24"><path d="M5 12h11M12 7l5 5-5 5M20 6v12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+      <symbol id="i-fim" viewBox="0 0 24 24"><rect x="6.5" y="6.5" width="11" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+      <symbol id="i-arquivo" viewBox="0 0 24 24"><path d="M4 5h16v4H4zM5.5 9v10h13V9M10 13h4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/></symbol>
+      <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+      <symbol id="i-dividir" viewBox="0 0 24 24"><path d="M12 3v18M7 8H4.5M7 16H4.5M19.5 8H17M19.5 16H17" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+    </defs>
+  </svg>
 
-<!-- ===================================================================
-     Setup de primeiro uso. Fica na frente de tudo ate ser concluido.
-     =================================================================== -->
-<div id="tela-setup" class="setup" hidden>
-  <div class="setup-caixa">
-    <header class="setup-cabecalho">
-      <div class="setup-marca">NuControle</div>
-      <h1>Vamos definir o seu ponto de partida</h1>
-      <p>
-        O controle comeca em <strong id="setup-mes-inicial">setembro de 2026</strong>.
-        Meses anteriores nao entram no app &mdash; a partir daqui, tudo e calculado
-        pelo que voce lancar.
-      </p>
-    </header>
-
-    <form id="form-setup" class="setup-corpo">
-
-      <section class="setup-passo">
-        <h2><span class="passo-num">1</span> Quanto voce tem na conta hoje?</h2>
-        <div class="campo-linha">
-          <label class="campo">
-            <span>Saldo na conta</span>
-            <input type="text" name="saldo_conta" inputmode="decimal" placeholder="R$ 0,00" data-moeda>
-          </label>
-          <label class="campo campo-estreito">
-            <span>Nesta data</span>
-            <input type="date" name="data_corte">
-          </label>
+  <div class="app">
+    <aside class="lateral">
+      <div class="marca">
+        <img class="marca-logo" src="img/icone.png" alt="" aria-hidden="true">
+        <span class="marca-nome">NuControle</span>
+      </div>
+      <nav class="nav" id="nav">
+        <button data-tela="visao"><svg><use href="#i-home"/></svg>Visão geral</button>
+        <button data-tela="gastos"><svg><use href="#i-lista"/></svg>Gastos do mês</button>
+        <button data-tela="cartao"><svg><use href="#i-cartao"/></svg>Cartão</button>
+        <button data-tela="caixinhas"><svg><use href="#i-cofre"/></svg>Caixinhas</button>
+        <button data-tela="terceiros"><svg><use href="#i-pessoas"/></svg>Terceiros</button>
+        <button data-tela="ajustes"><svg><use href="#i-ajustes"/></svg>Ajustes</button>
+      </nav>
+      <div class="mes-global">
+        <span class="mes-global-rotulo">Mês</span>
+        <div class="seletor-mes" id="sel-mes-global">
+          <button class="btn-icone" data-delta="-1" aria-label="Mês anterior" data-dica="Mês anterior (Ctrl+←)"><svg><use href="#i-esq"/></svg></button>
+          <span id="mes-global-nome"></span>
+          <button class="btn-icone" data-delta="1" aria-label="Próximo mês" data-dica="Próximo mês (Ctrl+→)"><svg><use href="#i-dir"/></svg></button>
         </div>
-        <p class="ajuda">
-          Abra o app do banco e copie o saldo. Lancamentos com data anterior a
-          esse dia aparecem nos relatorios, mas nao mexem no saldo &mdash; ele
-          ja os continha.
-        </p>
-      </section>
-
-      <section class="setup-passo">
-        <h2><span class="passo-num">2</span> Caixinhas e fundos</h2>
-        <div id="setup-reservas" class="lista-editavel"></div>
-        <button type="button" class="btn-fantasma" data-add="reserva">+ Adicionar caixinha ou fundo</button>
-      </section>
-
-      <section class="setup-passo">
-        <h2><span class="passo-num">3</span> Parcelamentos que ja estao rolando</h2>
-        <div id="setup-parcelamentos" class="lista-editavel"></div>
-        <button type="button" class="btn-fantasma" data-add="parcelamento">+ Adicionar parcelamento em andamento</button>
-        <p class="ajuda">
-          Ex.: notebook em 10x, voce ja pagou 3. Informe o valor da parcela,
-          <strong>10</strong> como total e <strong>4</strong> como a proxima a vencer.
-          O app gera da 4 ate a 10 nas faturas seguintes.
-        </p>
-      </section>
-
-      <section class="setup-passo">
-        <h2><span class="passo-num">4</span> Fatura que ja esta aberta</h2>
-        <div class="campo-linha">
-          <label class="campo">
-            <span>Valor ja acumulado</span>
-            <input type="text" name="fatura_aberta" inputmode="decimal" placeholder="R$ 0,00" data-moeda>
-          </label>
-          <label class="campo">
-            <span>Esse valor e</span>
-            <select name="fatura_responsavel">
-              <option value="PESSOAL">Gasto pessoal</option>
-              <option value="TERCEIROS">Gasto de terceiros</option>
-              <option value="GENESYS">Gasto Genesys</option>
-            </select>
-          </label>
-        </div>
-        <p class="ajuda" id="setup-janela-fatura"></p>
-      </section>
-
-      <footer class="setup-rodape">
-        <button type="button" class="btn-texto" id="setup-pular">Comecar tudo zerado</button>
-        <button type="submit" class="btn-principal">Comecar a usar</button>
-      </footer>
-    </form>
-  </div>
-</div>
-
-
-<!-- ===================================================================
-     Aplicativo
-     =================================================================== -->
-<div class="app" id="app" hidden>
-
-  <!-- ---------------- Seletor a esquerda ---------------- -->
-  <aside class="lateral">
-    <div class="marca">
-      <span class="marca-icone" aria-hidden="true"></span>
-      <span class="marca-nome">NuControle</span>
-    </div>
-
-    <label class="campo campo-mes">
-      <span>Mes</span>
-      <select id="seletor-mes"></select>
-    </label>
-
-    <nav class="nav" id="nav">
-      <button class="nav-item ativo" data-view="inicio">
-        <span class="nav-ponto"></span> Inicio
+        <button class="mes-hoje" id="mes-hoje" hidden>Voltar para hoje</button>
+      </div>
+      <button class="btn btn-primario btn-novo" id="btn-novo">
+        <svg><use href="#i-mais"/></svg>Novo lançamento
       </button>
-      <button class="nav-item" data-view="fixos">
-        <span class="nav-ponto"></span> Gastos fixos
-      </button>
-      <button class="nav-item" data-view="ajustes">
-        <span class="nav-ponto"></span> Ajustes
-      </button>
-    </nav>
+    </aside>
 
-    <!-- Formulario de lancamento: os campos ficam aqui, sempre a mao -->
-    <form class="form-lanc" id="form-lancamento">
-      <h2 class="form-titulo">Novo lancamento</h2>
-
-      <div class="segmentado" data-campo="fluxo">
-        <button type="button" class="seg ativo" data-valor="SAIDA">Saida</button>
-        <button type="button" class="seg" data-valor="ENTRADA">Entrada</button>
-      </div>
-
-      <label class="campo">
-        <span>Descricao</span>
-        <input type="text" name="descricao" maxlength="80" placeholder="Mercado, Uber, Netflix..." required>
-      </label>
-
-      <div class="campo-linha">
-        <label class="campo">
-          <span>Valor</span>
-          <input type="text" name="valor" inputmode="decimal" placeholder="R$ 0,00" data-moeda required>
-        </label>
-        <label class="campo campo-estreito">
-          <span>Data</span>
-          <input type="date" name="data" required>
-        </label>
-      </div>
-
-      <div class="campo">
-        <span class="campo-rotulo">De quem e o gasto</span>
-        <div class="segmentado vertical" data-campo="responsavel">
-          <button type="button" class="seg ativo" data-valor="PESSOAL">Pessoal</button>
-          <button type="button" class="seg" data-valor="TERCEIROS">Terceiros</button>
-          <button type="button" class="seg" data-valor="GENESYS">Genesys</button>
-        </div>
-      </div>
-
-      <div class="campo">
-        <span class="campo-rotulo">Tipo</span>
-        <div class="segmentado" data-campo="natureza">
-          <button type="button" class="seg ativo" data-valor="AVULSO">Avulso</button>
-          <button type="button" class="seg" data-valor="FIXO">Fixo</button>
-          <button type="button" class="seg" data-valor="PARCELAMENTO">Parcelado</button>
-        </div>
-      </div>
-
-      <!-- So aparece quando Parcelado esta selecionado -->
-      <div class="campo-linha" id="bloco-parcelas" hidden>
-        <label class="campo campo-estreito">
-          <span>Parcelas</span>
-          <input type="number" name="num_parcelas" min="1" max="120" value="2">
-        </label>
-        <label class="campo campo-estreito">
-          <span>Proxima</span>
-          <input type="number" name="parcela_inicial" min="1" max="120" value="1">
-        </label>
-        <p class="ajuda ajuda-inline" id="ajuda-parcelas"></p>
-      </div>
-
-      <!-- So aparece quando Fixo esta selecionado -->
-      <div class="campo" id="bloco-fixo" hidden>
-        <label class="campo">
-          <span>Repete todo dia</span>
-          <input type="number" name="dia" min="1" max="31" value="15">
-        </label>
-        <p class="ajuda ajuda-inline">
-          Cadastrado uma vez, aparece sozinho nos meses seguintes.
-        </p>
-      </div>
-
-      <div class="campo">
-        <span class="campo-rotulo">Meio de pagamento</span>
-        <div class="segmentado" data-campo="meio">
-          <button type="button" class="seg ativo" data-valor="CREDITO">Credito</button>
-          <button type="button" class="seg" data-valor="DEBITO">Pix / Debito</button>
-        </div>
-      </div>
-
-      <label class="campo">
-        <span>Categoria</span>
-        <select name="categoria_id" id="select-categoria"></select>
-      </label>
-
-      <p class="form-previsao" id="form-previsao"></p>
-      <button type="submit" class="btn-principal btn-largo">Adicionar</button>
-    </form>
-  </aside>
-
-  <!-- ---------------- Conteudo ---------------- -->
-  <main class="principal">
-    <div id="view-inicio" class="view">
+    <main class="principal">
       <header class="topo">
         <div>
-          <h1 id="topo-titulo">Setembro 2026</h1>
-          <p id="topo-sub" class="topo-sub"></p>
+          <h1 id="titulo">Visão geral</h1>
+          <p class="subtitulo" id="subtitulo"></p>
         </div>
-        <div class="topo-patrimonio">
-          <span class="rotulo">Patrimonio</span>
-          <strong id="topo-valor">R$ 0,00</strong>
-        </div>
+        <div class="topo-acoes" id="topo-acoes"></div>
       </header>
-
-      <section class="kpis" id="kpis"></section>
-
-      <section class="graficos">
-        <div class="cartao" id="cartao-categorias"></div>
-        <div class="cartao" id="cartao-responsavel"></div>
+      <section id="conteudo" class="conteudo" aria-live="polite">
+        <div class="carregando">Carregando…</div>
       </section>
+    </main>
+  </div>
 
-      <section class="cartao painel">
-        <div class="abas" id="abas" role="tablist"></div>
-        <div class="painel-corpo" id="painel-corpo"></div>
-      </section>
-    </div>
+  <dialog id="modal" class="modal">
+    <form method="dialog" class="modal-caixa" id="modal-form" novalidate>
+      <header class="modal-topo">
+        <h2 id="modal-titulo"></h2>
+        <button type="button" class="btn-icone" data-fechar aria-label="Fechar"><svg><use href="#i-x"/></svg></button>
+      </header>
+      <div class="modal-corpo" id="modal-corpo"></div>
+      <p class="modal-erro" id="modal-erro" role="alert" hidden></p>
+      <footer class="modal-rodape" id="modal-rodape"></footer>
+    </form>
+  </dialog>
 
-    <div id="view-fixos" class="view" hidden></div>
-    <div id="view-ajustes" class="view" hidden></div>
-  </main>
-</div>
+  <div class="avisos" id="avisos" aria-live="polite"></div>
 
-<div class="modal-fundo" id="modal-fundo" hidden>
-  <div class="modal" id="modal" role="dialog" aria-modal="true"></div>
-</div>
-<div class="avisos" id="avisos" aria-live="polite"></div>
-
-<script src="js/util.js"></script>
-<script src="js/api.js"></script>
-<script src="js/graficos.js"></script>
-<script src="js/tabelas.js"></script>
-<script src="js/setup.js"></script>
-<script src="js/app.js"></script>
+  <script src="js/util.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/graficos.js"></script>
+  <script src="js/lancamento.js"></script>
+  <script src="js/telas.js"></script>
+  <script src="js/app.js"></script>
 </body>
 </html>

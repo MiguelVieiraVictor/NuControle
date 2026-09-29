@@ -1,214 +1,209 @@
-/* ===========================================================================
-   Utilitarios: dinheiro, datas, DOM, avisos e modal.
+/* Utilitarios: dinheiro, datas, HTML seguro, modal e avisos.
+   Dinheiro e SEMPRE centavos inteiros aqui tambem -- nunca reais em float. */
 
-   Dinheiro no front tambem e SEMPRE int em centavos, igual ao Python.
-   Nenhum float atravessa a fronteira, nos dois sentidos.
-   =========================================================================== */
+const PALETA_DONOS = [
+  // ordem validada para daltonismo (pares vizinhos) sobre a superficie escura;
+  // o 1o e o do "Eu". Terceiros novos recebem a proxima cor livre.
+  "#9085E9", "#199E70", "#D95926", "#3987E5", "#C98500", "#D55181", "#008300", "#E66767",
+];
 
-const U = (() => {
+const PALETA_CATEGORIAS = [
+  "#FF8A65", "#FFD54F", "#4DD0E1", "#B388FF", "#7986CB", "#EF5350",
+  "#F06292", "#4FC3F7", "#9575CD", "#90A4AE", "#A1887F", "#66BB6A", "#78909C",
+];
 
-  /* -- Dinheiro ---------------------------------------------------------- */
+/** 123456 -> "R$ 1.234,56" (aritmetica inteira, sem float). */
+function reais(centavos, { sinal = false } = {}) {
+  const n = Math.trunc(Number(centavos) || 0);
+  const neg = n < 0;
+  const abs = Math.abs(n);
+  const inteiro = Math.floor(abs / 100).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+  const cent = String(abs % 100).padStart(2, "0");
+  const prefixo = neg ? "-" : sinal && n > 0 ? "+" : "";
+  return `${prefixo}R$ ${inteiro},${cent}`;
+}
 
-  const fmtBR = new Intl.NumberFormat('pt-BR', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
+/** Texto de um input de dinheiro -> centavos. "1.234,56" -> 123456. */
+function centavosDe(texto) {
+  const digitos = String(texto || "").replace(/\D/g, "");
+  return digitos ? parseInt(digitos, 10) : 0;
+}
+
+/** Centavos -> texto do input. 123456 -> "1.234,56". */
+function textoDinheiro(centavos) {
+  return reais(centavos).replace("R$ ", "");
+}
+
+/** Mascara de digitacao estilo app de banco: os digitos entram pela direita. */
+function mascararDinheiro(input) {
+  const aplicar = () => {
+    const c = centavosDe(input.value);
+    input.value = c ? textoDinheiro(c) : "";
+  };
+  input.addEventListener("input", aplicar);
+  aplicar();
+}
+
+const MESES = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
+  "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+const MESES_CURTOS = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
+
+function rotuloMes(ref) {
+  const [a, m] = ref.split("-").map(Number);
+  return `${MESES[m - 1]} ${a}`;
+}
+function rotuloMesCurto(ref) {
+  const [a, m] = ref.split("-").map(Number);
+  return `${MESES_CURTOS[m - 1]}/${String(a).slice(2)}`;
+}
+function somarMes(ref, delta) {
+  const [a, m] = ref.split("-").map(Number);
+  const t = a * 12 + (m - 1) + delta;
+  return `${Math.floor(t / 12)}-${String((t % 12) + 1).padStart(2, "0")}`;
+}
+/** "2026-09-08" -> "08/09" (ou "08/09/2026" com ano). */
+function dataBR(iso, { ano = false } = {}) {
+  if (!iso) return "";
+  const [a, m, d] = iso.split("-");
+  return ano ? `${d}/${m}/${a}` : `${d}/${m}`;
+}
+
+/** Escapa texto para HTML. Todo dado do usuario passa por aqui. */
+function esc(v) {
+  return String(v ?? "").replace(/[&<>"']/g, (c) => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+  })[c]);
+}
+
+function icone(nome) {
+  return `<svg aria-hidden="true"><use href="#i-${nome}"/></svg>`;
+}
+
+function iniciais(nome) {
+  const p = String(nome).trim().split(/\s+/);
+  return ((p[0] || "")[0] + (p.length > 1 ? p[p.length - 1][0] : (p[0] || "")[1] || "")).toUpperCase();
+}
+
+function $(sel, raiz = document) { return raiz.querySelector(sel); }
+function $$(sel, raiz = document) { return [...raiz.querySelectorAll(sel)]; }
+
+/* ------------------------------------------------------------------ avisos */
+
+function avisar(texto, tipo = "ok") {
+  const el = document.createElement("div");
+  el.className = `aviso ${tipo === "erro" ? "erro" : ""}`;
+  el.textContent = texto;
+  $("#avisos").appendChild(el);
+  setTimeout(() => el.remove(), tipo === "erro" ? 6000 : 3000);
+}
+
+/* ------------------------------------------------------------------ modal */
+
+const Modal = {
+  el: null,
+  _aoSalvar: null,
+
+  /**
+   * Abre o modal.
+   *   titulo, corpo (HTML), botoes: [{texto, classe, acao: "salvar"|"fechar"|fn, esquerda}]
+   *   aoAbrir(corpoEl), aoSalvar(corpoEl) -> Promise (erro vira mensagem no modal)
+   */
+  abrir({ titulo, corpo, botoes, aoAbrir, aoSalvar, largura }) {
+    this.el = $("#modal");
+    this.el.style.maxWidth = largura || "";
+    $("#modal-titulo").textContent = titulo;
+    $("#modal-corpo").innerHTML = corpo;
+    this.erro(null);
+    this._aoSalvar = aoSalvar;
+
+    const rodape = $("#modal-rodape");
+    rodape.innerHTML = "";
+    for (const b of botoes || [
+      { texto: "Cancelar", acao: "fechar" },
+      { texto: "Salvar", classe: "btn-primario", acao: "salvar" },
+    ]) {
+      const btn = document.createElement("button");
+      btn.type = b.acao === "salvar" ? "submit" : "button";
+      btn.className = `btn ${b.classe || ""} ${b.esquerda ? "esquerda" : ""}`;
+      btn.textContent = b.texto;
+      if (b.acao === "fechar") btn.addEventListener("click", () => this.fechar());
+      else if (typeof b.acao === "function") btn.addEventListener("click", () => b.acao());
+      rodape.appendChild(btn);
+    }
+
+    if (!this.el.open) this.el.showModal();
+    if (aoAbrir) aoAbrir($("#modal-corpo"));
+    const primeiro = $("#modal-corpo input:not([type=hidden]):not([type=color]), #modal-corpo select");
+    if (primeiro) primeiro.focus();
+  },
+
+  fechar() { if (this.el && this.el.open) this.el.close(); },
+
+  erro(msg) {
+    const el = $("#modal-erro");
+    el.hidden = !msg;
+    el.textContent = msg || "";
+  },
+
+  async _enviar(ev) {
+    ev.preventDefault();
+    if (!this._aoSalvar) return;
+    const botao = $("#modal-rodape button[type=submit]");
+    if (botao) botao.disabled = true;
+    try {
+      await this._aoSalvar($("#modal-corpo"));
+      this.fechar();
+    } catch (e) {
+      this.erro(e.message);
+    } finally {
+      if (botao) botao.disabled = false;
+    }
+  },
+};
+
+document.addEventListener("DOMContentLoaded", () => {
+  $("#modal-form").addEventListener("submit", (ev) => Modal._enviar(ev));
+  $("#modal [data-fechar]").addEventListener("click", () => Modal.fechar());
+});
+
+/** Confirmacao no mesmo estilo do app. Resolve true/false. */
+function confirmar(titulo, texto, { botao = "Confirmar", perigo = true } = {}) {
+  return new Promise((resolve) => {
+    let resposta = false;
+    Modal.abrir({
+      titulo,
+      corpo: `<div style="color:var(--texto-2)">${texto}</div>`,
+      largura: "440px",
+      botoes: [
+        { texto: "Cancelar", acao: "fechar" },
+        { texto: botao, classe: perigo ? "btn-perigo" : "btn-primario", acao: () => { resposta = true; Modal.fechar(); } },
+      ],
+    });
+    Modal.el.addEventListener("close", () => resolve(resposta), { once: true });
   });
+}
 
-  /** 123456 -> "R$ 1.234,56" */
-  function reais(centavos) {
-    const n = Number(centavos) || 0;
-    const sinal = n < 0 ? '-' : '';
-    return `${sinal}R$ ${fmtBR.format(Math.abs(n) / 100)}`;
-  }
+/* ------------------------------------------------------------------ dica flutuante */
 
-  /** 123456 -> "1.234,56" (sem o R$, para tabelas apertadas) */
-  function numero(centavos) {
-    return fmtBR.format((Number(centavos) || 0) / 100);
-  }
+const Dica = {
+  el: null,
+  mostrar(html, x, y) {
+    if (!this.el) {
+      this.el = document.createElement("div");
+      this.el.className = "dica-flutuante";
+      document.body.appendChild(this.el);
+    }
+    this.el.innerHTML = html;
+    this.el.hidden = false;
+    const r = this.el.getBoundingClientRect();
+    this.el.style.left = `${Math.min(x + 14, innerWidth - r.width - 8)}px`;
+    this.el.style.top = `${Math.min(y + 14, innerHeight - r.height - 8)}px`;
+  },
+  esconder() { if (this.el) this.el.hidden = true; },
+};
 
-  /** Le os digitos de um campo com mascara e devolve centavos. */
-  function centavosDe(input) {
-    const digitos = String(input?.value ?? '').replace(/\D/g, '');
-    return digitos ? parseInt(digitos, 10) : 0;
-  }
-
-  /**
-   * Mascara de moeda que digita da direita para a esquerda.
-   * Digitando "4490" a pessoa ve "R$ 44,90" -- e o jeito que nao deixa
-   * duvida sobre onde esta a virgula.
-   */
-  function aplicarMascara(input) {
-    const digitos = input.value.replace(/\D/g, '').replace(/^0+/, '');
-    input.value = digitos ? `R$ ${fmtBR.format(parseInt(digitos, 10) / 100)}` : '';
-  }
-
-  function ligarMascaras(raiz = document) {
-    raiz.querySelectorAll('input[data-moeda]').forEach((input) => {
-      if (input.dataset.mascaraLigada) return;
-      input.dataset.mascaraLigada = '1';
-      input.addEventListener('input', () => aplicarMascara(input));
-    });
-  }
-
-  function preencherMoeda(input, centavos) {
-    input.value = centavos ? `R$ ${fmtBR.format(centavos / 100)}` : '';
-  }
-
-  /* -- Datas ------------------------------------------------------------- */
-
-  /** "2026-09-08" -> "08/09" */
-  function diaMes(iso) {
-    if (!iso) return '';
-    const [, m, d] = iso.slice(0, 10).split('-');
-    return `${d}/${m}`;
-  }
-
-  /** "2026-09-08" -> "08/09/2026" */
-  function dataBR(iso) {
-    if (!iso) return '';
-    const [a, m, d] = iso.slice(0, 10).split('-');
-    return `${d}/${m}/${a}`;
-  }
-
-  /** Hoje em "AAAA-MM-DD", no fuso local (nunca em UTC). */
-  function hojeISO() {
-    const d = new Date();
-    const p = (n) => String(n).padStart(2, '0');
-    return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
-  }
-
-  /* -- DOM --------------------------------------------------------------- */
-
-  /**
-   * Escapa texto para interpolar em HTML.
-   * Descricao de lancamento e texto livre do usuario: sem isso, digitar
-   * "<b>" na descricao quebraria a pagina.
-   */
-  function esc(texto) {
-    return String(texto ?? '').replace(/[&<>"']/g, (c) => ({
-      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
-    }[c]));
-  }
-
-  const $ = (sel, raiz = document) => raiz.querySelector(sel);
-  const $$ = (sel, raiz = document) => Array.from(raiz.querySelectorAll(sel));
-
-  /* -- Avisos ------------------------------------------------------------ */
-
-  function aviso(mensagem, tipo = 'info') {
-    const caixa = $('#avisos');
-    const el = document.createElement('div');
-    el.className = `aviso aviso-${tipo}`;
-    el.textContent = mensagem;
-    caixa.appendChild(el);
-    setTimeout(() => {
-      el.style.opacity = '0';
-      el.style.transform = 'translateY(8px)';
-      setTimeout(() => el.remove(), 250);
-    }, tipo === 'erro' ? 6500 : 3200);
-  }
-
-  const ok = (m) => aviso(m, 'ok');
-  const erro = (m) => aviso(m, 'erro');
-
-  /* -- Modal ------------------------------------------------------------- */
-
-  let fecharAtual = null;
-
-  /**
-   * Abre um modal. `montar(corpo, fechar)` recebe o elemento e a funcao
-   * de fechar, e devolve opcionalmente o elemento que deve receber foco.
-   */
-  function modal(montar) {
-    const fundo = $('#modal-fundo');
-    const corpo = $('#modal');
-    corpo.innerHTML = '';
-
-    const fechar = () => {
-      fundo.hidden = true;
-      corpo.innerHTML = '';
-      document.removeEventListener('keydown', porEsc);
-      fecharAtual = null;
-    };
-    const porEsc = (e) => { if (e.key === 'Escape') fechar(); };
-
-    fecharAtual = fechar;
-    const foco = montar(corpo, fechar);
-    fundo.hidden = false;
-    document.addEventListener('keydown', porEsc);
-    ligarMascaras(corpo);
-    (foco || corpo.querySelector('input, select, button'))?.focus();
-    return fechar;
-  }
-
-  function ligarFundoModal() {
-    $('#modal-fundo').addEventListener('click', (e) => {
-      if (e.target.id === 'modal-fundo' && fecharAtual) fecharAtual();
-    });
-  }
-
-  /** Confirmacao com texto proprio -- usada antes de apagar qualquer coisa. */
-  function confirmar({ titulo, texto, confirmar: rotulo = 'Confirmar', perigo = true }) {
-    return new Promise((resolve) => {
-      modal((corpo, fechar) => {
-        corpo.innerHTML = `
-          <h2>${esc(titulo)}</h2>
-          <p class="modal-sub">${esc(texto)}</p>
-          <div class="modal-rodape">
-            <button type="button" class="btn-contorno" data-acao="nao">Cancelar</button>
-            <button type="button" class="${perigo ? 'btn-perigo' : 'btn-roxo'}" data-acao="sim">
-              ${esc(rotulo)}
-            </button>
-          </div>`;
-        corpo.querySelector('[data-acao="nao"]').onclick = () => { fechar(); resolve(false); };
-        corpo.querySelector('[data-acao="sim"]').onclick = () => { fechar(); resolve(true); };
-        return corpo.querySelector('[data-acao="nao"]');
-      });
-    });
-  }
-
-  /* -- Rotulos ----------------------------------------------------------- */
-
-  const ROTULO = {
-    PESSOAL: 'Pessoal',
-    TERCEIROS: 'Terceiros',
-    GENESYS: 'Genesys',
-    FIXO: 'Fixos',
-    PARCELAMENTO: 'Parcelamentos',
-    AVULSO: 'Avulsos',
-    CREDITO: 'Credito',
-    DEBITO: 'Pix / Debito',
-    CAIXINHA: 'Caixinha',
-    FUNDO: 'Fundo',
-    DEPOSITO: 'Deposito',
-    SAQUE: 'Saque',
-    RENDIMENTO: 'Rendimento',
-    ABERTA: 'Aberta',
-    FECHADA: 'Fechada',
-    PAGA: 'Paga',
-    PARCIAL: 'Parcial',
-    FUTURA: 'Futura',
-  };
-
-  const COR_RESP = {
-    PESSOAL: 'var(--dado-pessoal)',
-    TERCEIROS: 'var(--dado-terceiros)',
-    GENESYS: 'var(--dado-genesys)',
-  };
-
-  const rotulo = (chave) => ROTULO[chave] || chave;
-
-  /** "3 lancamentos" / "1 lancamento" */
-  function plural(n, singular, plural_) {
-    return `${n} ${n === 1 ? singular : plural_}`;
-  }
-
-  return {
-    reais, numero, centavosDe, aplicarMascara, ligarMascaras, preencherMoeda,
-    diaMes, dataBR, hojeISO,
-    esc, $, $$,
-    aviso, ok, erro,
-    modal, ligarFundoModal, confirmar,
-    rotulo, ROTULO, COR_RESP, plural,
-  };
-})();
+document.addEventListener("mousemove", (ev) => {
+  const alvo = ev.target.closest("[data-dica]");
+  if (alvo) Dica.mostrar(alvo.dataset.dica, ev.clientX, ev.clientY);
+  else Dica.esconder();
+});

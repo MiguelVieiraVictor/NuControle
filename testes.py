@@ -1,679 +1,449 @@
 """
-Testes do NuControle.
+Testes do NuControle. Rodam num banco temporario, nunca no de verdade.
 
     python testes.py
-
-Roda em um banco TEMPORARIO -- nunca toca em `dados/nucontrole.db`.
-Cobre o que da prejuizo se estiver errado: centavos, ciclo da fatura,
-divisao de parcelas e o efeito de cada operacao no saldo.
 """
 
 from __future__ import annotations
 
 import os
-import sys
+import random
 import tempfile
-from datetime import date
+import unittest
+from datetime import date, timedelta
 from pathlib import Path
 
-# Precisa vir ANTES de importar backend.db, que le a pasta na hora do import.
-_TMP = Path(tempfile.mkdtemp(prefix="nucontrole_testes_"))
-os.environ["NUCONTROLE_DADOS"] = str(_TMP)
+_TMP = tempfile.TemporaryDirectory()
+os.environ["NUCONTROLE_DADOS"] = _TMP.name
 
-from backend import db, regras, repositorio  # noqa: E402
-from backend.modelos import (  # noqa: E402
-    ciclo_fatura,
-    clamp_dia,
-    dividir_parcelas,
-    fatura_de_compra,
+from nucontrole import calendario as cal  # noqa: E402
+from nucontrole import consultas, escrita  # noqa: E402
+from nucontrole.base import ErroValidacao, fixar_hoje  # noqa: E402
+from nucontrole.db import conectar  # noqa: E402
+from nucontrole.dinheiro import (  # noqa: E402
+    dividir_igual,
     formatar_reais,
     parse_centavos,
-    somar_meses,
+    ratear,
+    ratear_matriz,
 )
 
-_falhas: list[str] = []
-_total = 0
-
-
-def checar(rotulo: str, obtido, esperado) -> None:
-    global _total
-    _total += 1
-    if obtido == esperado:
-        print(f"  [ OK ] {rotulo}")
-    else:
-        print(f"  [FALHA] {rotulo}")
-        print(f"          esperado: {esperado!r}")
-        print(f"          obtido  : {obtido!r}")
-        _falhas.append(rotulo)
-
-
-def checar_erro(rotulo: str, funcao, excecao=Exception) -> None:
-    global _total
-    _total += 1
-    try:
-        funcao()
-    except excecao:
-        print(f"  [ OK ] {rotulo}")
-        return
-    except Exception as exc:  # noqa: BLE001
-        print(f"  [FALHA] {rotulo} -- levantou {type(exc).__name__}, esperava {excecao.__name__}")
-        _falhas.append(rotulo)
-        return
-    print(f"  [FALHA] {rotulo} -- nao levantou erro nenhum")
-    _falhas.append(rotulo)
-
-
-def secao(titulo: str) -> None:
-    print(f"\n{titulo}")
-    print("-" * len(titulo))
-
-
-# ---------------------------------------------------------------------------
-
-
-def testar_dinheiro() -> None:
-    secao("Dinheiro em centavos")
-
-    checar("formata mil reais", formatar_reais(123456), "R$ 1.234,56")
-    checar("formata centavos sozinhos", formatar_reais(5), "R$ 0,05")
-    checar("formata zero", formatar_reais(0), "R$ 0,00")
-    checar("formata negativo", formatar_reais(-45090), "-R$ 450,90")
-    checar("formata milhao", formatar_reais(123456789), "R$ 1.234.567,89")
-
-    checar("le formato brasileiro", parse_centavos("1.234,56"), 123456)
-    checar("le formato americano", parse_centavos("1234.56"), 123456)
-    checar("le reais inteiros", parse_centavos("1234"), 123400)
-    checar("le com R$ na frente", parse_centavos("R$ 89,90"), 8990)
-    checar("le float", parse_centavos(44.90), 4490)
-    checar("le negativo", parse_centavos("-50,00"), -5000)
-    checar_erro("recusa texto vazio", lambda: parse_centavos(""), ValueError)
-
-
-def testar_parcelas() -> None:
-    secao("Divisao de parcelas (nao pode perder centavo)")
-
-    p3 = dividir_parcelas(10000, 3)
-    checar("100,00 em 3x", p3, [3334, 3333, 3333])
-    checar("soma de 3x fecha exata", sum(p3), 10000)
-
-    p7 = dividir_parcelas(100000, 7)
-    checar("1.000,00 em 7x soma exata", sum(p7), 100000)
-    checar("1.000,00 em 7x primeira parcela", p7[0], 14286)
-
-    checar("1x devolve o total", dividir_parcelas(5000, 1), [5000])
-    checar_erro("recusa zero parcelas", lambda: dividir_parcelas(100, 0), ValueError)
-
-    for total in (1, 99, 100, 1234567):
-        for n in (1, 2, 3, 6, 10, 12, 18, 24):
-            checar(f"{total}c em {n}x soma exata", sum(dividir_parcelas(total, n)), total)
-
-
-def testar_calendario() -> None:
-    secao("Calendario (dia 29 em fevereiro nao pode explodir)")
-
-    checar("dia 29 em fevereiro nao bissexto", clamp_dia(2026, 2, 29), date(2026, 2, 28))
-    checar("dia 29 em fevereiro bissexto", clamp_dia(2028, 2, 29), date(2028, 2, 29))
-    checar("dia 31 em abril", clamp_dia(2026, 4, 31), date(2026, 4, 30))
-    checar("dia normal passa direto", clamp_dia(2026, 9, 15), date(2026, 9, 15))
-
-    checar("dezembro + 1 mes", somar_meses(2026, 12, 1), (2027, 1))
-    checar("janeiro - 1 mes", somar_meses(2026, 1, -1), (2025, 12))
-    checar("janeiro - 2 meses", somar_meses(2026, 1, -2), (2025, 11))
-    checar("setembro + 12 meses", somar_meses(2026, 9, 12), (2027, 9))
-
-
-def testar_ciclo_fatura() -> None:
-    secao("Ciclo da fatura (fecha dia 29, vence dia 3)")
-
-    c = ciclo_fatura("2026-10", 29, 3)
-    checar("fatura out/2026 vence", c.vencimento, date(2026, 10, 3))
-    checar("fatura out/2026 fecha", c.fechamento, date(2026, 9, 29))
-    checar("fatura out/2026 abre", c.inicio, date(2026, 8, 30))
-
-    checar("compra 08/09 -> fatura out", fatura_de_compra(date(2026, 9, 8), 29), "2026-10")
-    checar("compra 29/09 (dia do corte) -> out", fatura_de_compra(date(2026, 9, 29), 29), "2026-10")
-    checar("compra 30/09 (pos corte) -> nov", fatura_de_compra(date(2026, 9, 30), 29), "2026-11")
-    checar("compra 30/08 -> out", fatura_de_compra(date(2026, 8, 30), 29), "2026-10")
-    checar("compra 29/08 -> set", fatura_de_compra(date(2026, 8, 29), 29), "2026-09")
-    checar("compra 31/12 -> fev do ano seguinte", fatura_de_compra(date(2026, 12, 31), 29), "2027-02")
-
-    # A propriedade que importa: toda data cai em exatamente UMA fatura.
-    # Sem isso, uma compra sumiria ou seria cobrada duas vezes.
-    d = date(2026, 1, 1)
-    problemas = []
-    while d < date(2029, 1, 1):
-        ref = fatura_de_compra(d, 29)
-        if not ciclo_fatura(ref, 29, 3).contem(d):
-            problemas.append(d.isoformat())
-        d = date.fromordinal(d.toordinal() + 1)
-    checar("3 anos de datas caem na fatura certa", problemas, [])
-
-    # E as janelas nao se sobrepoem nem deixam buraco (inclusive em fevereiro).
-    buracos = []
-    ano, mes = 2026, 1
-    anterior = None
-    for _ in range(36):
-        c = ciclo_fatura(f"{ano:04d}-{mes:02d}", 29, 3)
-        if anterior and c.inicio.toordinal() != anterior.toordinal() + 1:
-            buracos.append(c.ref)
-        anterior = c.fechamento
-        ano, mes = somar_meses(ano, mes, 1)
-    checar("36 ciclos encaixados sem buraco", buracos, [])
-
-
-# ---------------------------------------------------------------------------
-# Cenario ponta a ponta em banco temporario
-# ---------------------------------------------------------------------------
-
-
-def testar_cenario() -> None:
-    secao("Cenario completo: setembro/2026")
-
-    # Congela "hoje" em 05/10/2026: setembro inteiro ja passou e a fatura
-    # que venceu em 03/10 pode ser paga. Sem congelar, o resultado dos
-    # testes mudaria conforme o dia em que fossem rodados.
-    regras.fixar_hoje(date(2026, 10, 5))
-
-    conn = db.conectar()
-    db.inicializar(conn)
-
-    cats = {c["nome"]: c["id"] for c in repositorio.listar_categorias(conn)}
-
-    # --- Setup: 2.000 na conta, 800 na caixinha, fatura aberta de 300 -------
-    repositorio.aplicar_setup(
-        conn,
-        {
-            "saldo_conta": 200000,
-            "data_corte": "2026-09-01",
-            "reservas": [
-                {"nome": "Reserva", "tipo": "CAIXINHA", "saldo": 80000},
-                {"nome": "MXRF11", "tipo": "FUNDO", "saldo": 150000},
-            ],
-            "fatura_aberta": {"valor": 30000, "responsavel": "PESSOAL"},
-        },
-    )
-    cfg = regras.carregar_config(conn)
-    checar("setup marcado como concluido", cfg.setup_concluido, True)
-    checar("saldo inicial gravado", cfg.saldo_inicial_conta, 200000)
-
-    conta = regras.saldo_conta(conn, cfg)
-    checar("saldo da conta apos setup", conta["saldo"], 200000)
-
-    reservas = {r["nome"]: r["saldo"] for r in regras.saldos_reservas(conn, cfg)}
-    checar("caixinha apos setup", reservas["Reserva"], 80000)
-    checar("fundo apos setup", reservas["MXRF11"], 150000)
-
-    # --- Gasto no credito: nao mexe no saldo, entra na fatura --------------
-    repositorio.criar_lancamento(
-        conn,
-        {
-            "data": "2026-09-08",
-            "descricao": "Mercado",
-            "valor": 24000,
-            "responsavel": "PESSOAL",
-            "natureza": "AVULSO",
-            "meio": "CREDITO",
-            "categoria_id": cats["Mercado"],
-        },
-    )
-    checar(
-        "credito NAO altera o saldo da conta",
-        regras.saldo_conta(conn, cfg)["saldo"],
-        200000,
-    )
-
-    # --- Gasto no debito: sai do saldo na hora ----------------------------
-    repositorio.criar_lancamento(
-        conn,
-        {
-            "data": "2026-09-09",
-            "descricao": "Pix padaria",
-            "valor": 5000,
-            "responsavel": "PESSOAL",
-            "natureza": "AVULSO",
-            "meio": "DEBITO",
-            "categoria_id": cats["Alimentacao"],
-        },
-    )
-    checar("debito sai do saldo", regras.saldo_conta(conn, cfg)["saldo"], 195000)
-
-    # --- Entrada: salario -------------------------------------------------
-    repositorio.criar_lancamento(
-        conn,
-        {
-            "data": "2026-09-05",
-            "descricao": "Salario",
-            "valor": 500000,
-            "fluxo": "ENTRADA",
-            "responsavel": "PESSOAL",
-            "natureza": "AVULSO",
-            "meio": "DEBITO",
-        },
-    )
-    checar("entrada soma no saldo", regras.saldo_conta(conn, cfg)["saldo"], 695000)
-
-    # --- Gastos de terceiros e Genesys no credito -------------------------
-    repositorio.criar_lancamento(
-        conn,
-        {
-            "data": "2026-09-10",
-            "descricao": "Uber do Joao",
-            "valor": 8200,
-            "responsavel": "TERCEIROS",
-            "natureza": "AVULSO",
-            "meio": "CREDITO",
-            "categoria_id": cats["Transporte"],
-        },
-    )
-    repositorio.criar_lancamento(
-        conn,
-        {
-            "data": "2026-09-11",
-            "descricao": "Combustivel obra",
-            "valor": 72300,
-            "responsavel": "GENESYS",
-            "natureza": "AVULSO",
-            "meio": "CREDITO",
-            "categoria_id": cats["Transporte"],
-        },
-    )
-
-    # --- Gasto fixo cadastrado uma vez ------------------------------------
-    repositorio.criar_recorrencia(
-        conn,
-        {
-            "descricao": "Netflix",
-            "valor": 4490,
-            "dia": 15,
-            "responsavel": "PESSOAL",
-            "meio": "CREDITO",
-            "categoria_id": cats["Assinaturas"],
-            "inicio_ref": "2026-09",
-        },
-    )
-    criados = regras.materializar_recorrencias(conn, cfg, "2026-11")
-    checar("fixo gerado para set, out e nov", criados, 3)
-
-    de_novo = regras.materializar_recorrencias(conn, cfg, "2026-11")
-    checar("materializar de novo nao duplica", de_novo, 0)
-
-    # --- Parcelamento: 1.200 em 10x --------------------------------------
-    parc = repositorio.criar_parcelamento(
-        conn,
-        {
-            "descricao": "Notebook",
-            "valor": 120000,
-            "num_parcelas": 10,
-            "data": "2026-09-12",
-            "responsavel": "GENESYS",
-            "meio": "CREDITO",
-            "categoria_id": cats["Compras"],
-        },
-    )
-    checar("10 parcelas geradas", parc["parcelas_geradas"], 10)
-
-    parcelas = repositorio.listar_lancamentos(conn, {"natureza": "PARCELAMENTO", "limite": 50})
-    checar("soma das parcelas fecha o total", sum(p["valor"] for p in parcelas), 120000)
-    checar(
-        "cada parcela numa fatura diferente",
-        len({p["fatura_ref"] for p in parcelas}),
-        10,
-    )
-    checar(
-        "cada parcela num mes diferente",
-        len({p["data"][:7] for p in parcelas}),
-        10,
-    )
-
-    # --- Fatura de outubro (compras de 30/08 a 29/09) --------------------
-    fatura = regras.montar_fatura(conn, cfg, "2026-10")
-    esperado = (
-        30000    # fatura aberta trazida no setup
-        + 24000  # mercado
-        + 8200   # uber do Joao
-        + 72300  # combustivel Genesys
-        + 4490   # netflix
-        + 12000  # parcela 1/10 do notebook
-    )
-    checar("total da fatura de outubro", fatura["total"], esperado)
-    checar("fatura vence 03/10", fatura["ciclo"]["vencimento"], "2026-10-03")
-
-    checar("parte PESSOAL da fatura", fatura["por_responsavel"]["PESSOAL"], 30000 + 24000 + 4490)
-    checar("parte TERCEIROS da fatura", fatura["por_responsavel"]["TERCEIROS"], 8200)
-    checar("parte GENESYS da fatura", fatura["por_responsavel"]["GENESYS"], 72300 + 12000)
-    checar(
-        "as tres partes somam o total",
-        sum(fatura["por_responsavel"].values()),
-        fatura["total"],
-    )
-    # Em 05/10 a fatura de outubro ja fechou (29/09) e ainda nao foi paga.
-    checar("fatura fechada e nao paga", fatura["status"], "FECHADA")
-
-    # --- Pagar a fatura tirando da caixinha ------------------------------
-    # Este e o fluxo central do app: o dinheiro sai da CAIXINHA, e o saldo
-    # da conta nao pode se mover por causa disso.
-    saldo_antes = regras.saldo_conta(conn, cfg)["saldo"]
-    repositorio.criar_mov_reserva(
-        conn,
-        {"reserva_id": 1, "data": "2026-09-20", "tipo": "DEPOSITO", "valor": 100000},
-    )
-    checar(
-        "deposito na caixinha tira da conta",
-        regras.saldo_conta(conn, cfg)["saldo"],
-        saldo_antes - 100000,
-    )
-
-    saldo_antes = regras.saldo_conta(conn, cfg)["saldo"]
-    reserva_antes = {r["id"]: r["saldo"] for r in regras.saldos_reservas(conn, cfg)}[1]
-
-    repositorio.pagar_fatura(
-        conn,
-        {"fatura_ref": "2026-10", "data": "2026-10-03", "valor": 50000, "reserva_id": 1},
-    )
-
-    checar(
-        "pagar fatura pela caixinha NAO move o saldo da conta",
-        regras.saldo_conta(conn, cfg)["saldo"],
-        saldo_antes,
-    )
-    reserva_depois = {r["id"]: r["saldo"] for r in regras.saldos_reservas(conn, cfg)}[1]
-    checar("pagamento saiu da caixinha", reserva_depois, reserva_antes - 50000)
-
-    fatura = regras.montar_fatura(conn, cfg, "2026-10")
-    checar("fatura marcada como parcial", fatura["status"], "PARCIAL")
-    checar("valor pago registrado", fatura["pago"], 50000)
-    checar("restante da fatura", fatura["restante"], esperado - 50000)
-
-    # --- Pagar direto do saldo da conta ----------------------------------
-    saldo_antes = regras.saldo_conta(conn, cfg)["saldo"]
-    repositorio.pagar_fatura(
-        conn, {"fatura_ref": "2026-10", "data": "2026-10-03", "valor": 10000}
-    )
-    checar(
-        "pagar sem caixinha sai do saldo da conta",
-        regras.saldo_conta(conn, cfg)["saldo"],
-        saldo_antes - 10000,
-    )
-
-    # --- Desfazer o pagamento pela caixinha devolve o dinheiro -----------
-    reserva_antes = {r["id"]: r["saldo"] for r in regras.saldos_reservas(conn, cfg)}[1]
-    pagamentos = regras.montar_fatura(conn, cfg, "2026-10")["pagamentos"]
-    pago_da_caixinha = next(p for p in pagamentos if p["reserva_id"] == 1)
-    repositorio.excluir_pagamento(conn, pago_da_caixinha["id"])
-    reserva_depois = {r["id"]: r["saldo"] for r in regras.saldos_reservas(conn, cfg)}[1]
-    checar(
-        "apagar pagamento desfaz o saque da caixinha",
-        reserva_depois,
-        reserva_antes + 50000,
-    )
-
-    # --- Rendimento cresce a caixinha sem tocar na conta ------------------
-    saldo_antes = regras.saldo_conta(conn, cfg)["saldo"]
-    repositorio.criar_mov_reserva(
-        conn,
-        {"reserva_id": 1, "data": "2026-09-30", "tipo": "RENDIMENTO", "valor": 412},
-    )
-    checar(
-        "rendimento nao mexe na conta",
-        regras.saldo_conta(conn, cfg)["saldo"],
-        saldo_antes,
-    )
-
-    # --- Lancamento FUTURO nao pode mexer no saldo de hoje ---------------
-    # Este e o bug que a inspecao visual pegou: ao cadastrar o aluguel como
-    # gasto fixo, o app gerava tambem a parcela do mes seguinte, e o saldo
-    # de HOJE caia pelo aluguel que ainda nao tinha sido pago.
-    secao("Saldo conta o realizado, nao o previsto")
-
-    saldo_antes = regras.saldo_conta(conn, cfg)["saldo"]
-    repositorio.criar_lancamento(
-        conn,
-        {
-            "data": "2026-10-28",  # depois do "hoje" congelado (05/10)
-            "descricao": "Aluguel de outubro",
-            "valor": 145000,
-            "responsavel": "PESSOAL",
-            "natureza": "AVULSO",
-            "meio": "DEBITO",
-        },
-    )
-    conta = regras.saldo_conta(conn, cfg)
-    checar("gasto futuro NAO derruba o saldo de hoje", conta["saldo"], saldo_antes)
-    checar("gasto futuro aparece como 'a sair no mes'", conta["a_sair_no_mes"], 145000)
-    checar(
-        "previsao de fim do mes desconta o futuro",
-        conta["saldo_previsto_fim_do_mes"],
-        saldo_antes - 145000,
-    )
-
-    repositorio.criar_lancamento(
-        conn,
-        {
-            "data": "2026-10-30",
-            "descricao": "Freelance a receber",
-            "valor": 90000,
-            "fluxo": "ENTRADA",
-            "responsavel": "PESSOAL",
-            "natureza": "AVULSO",
-            "meio": "DEBITO",
-        },
-    )
-    conta = regras.saldo_conta(conn, cfg)
-    checar("entrada futura NAO sobe o saldo de hoje", conta["saldo"], saldo_antes)
-    checar("entrada futura aparece como 'a entrar no mes'", conta["a_entrar_no_mes"], 90000)
-    checar(
-        "previsao considera saidas e entradas futuras",
-        conta["saldo_previsto_fim_do_mes"],
-        saldo_antes - 145000 + 90000,
-    )
-
-    # Movimentacao futura de caixinha tambem nao conta.
-    reserva_antes = {r["id"]: r["saldo"] for r in regras.saldos_reservas(conn, cfg)}[1]
-    conn.execute(
-        "INSERT INTO mov_reserva (reserva_id, data, tipo, valor, descricao, criado_em) "
-        "VALUES (1, '2026-10-25', 'DEPOSITO', 50000, 'Aporte programado', '2026-10-05')"
-    )
-    checar(
-        "deposito futuro nao infla a caixinha",
-        {r["id"]: r["saldo"] for r in regras.saldos_reservas(conn, cfg)}[1],
-        reserva_antes,
-    )
-    conn.execute("DELETE FROM mov_reserva WHERE descricao = 'Aporte programado'")
-
-    # Limpa os dois lancamentos futuros para nao sujar os totais adiante.
-    conn.execute("DELETE FROM lancamento WHERE data IN ('2026-10-28', '2026-10-30')")
-
-    # --- Dashboard do mes ------------------------------------------------
-    resumo = regras.resumo_mes(conn, cfg, "2026-09")
-    # Sem os 30000 da fatura em aberto do setup: aquilo foi gasto em agosto,
-    # entra na fatura a pagar mas nao conta como gasto de setembro.
-    gastos_setembro = 24000 + 5000 + 8200 + 72300 + 4490 + 12000
-    checar("total de saidas em setembro", resumo["total_saidas"], gastos_setembro)
-    # O saldo de fatura do setup tem que estar nos DOIS lados certos:
-    # dentro da fatura a pagar, fora do relatorio de gasto do mes.
-    checar(
-        "saldo do setup NAO aparece nas tabelas do mes",
-        [
-            i
-            for t in resumo["tabelas"].values()
-            for g in t["grupos"]
-            for i in g["itens"]
-            if i["origem"] == "SETUP"
-        ],
-        [],
-    )
-    checar(
-        "saldo do setup APARECE na fatura a pagar",
-        sum(
-            i["valor"]
-            for i in regras.montar_fatura(conn, cfg, "2026-10")["itens"]
-            if i["origem"] == "SETUP"
-        ),
-        30000,
-    )
-    checar("total de entradas em setembro", resumo["total_entradas"], 500000)
-    checar(
-        "categorias somam o total de saidas",
-        sum(c["total"] for c in resumo["por_categoria"]),
-        gastos_setembro,
-    )
-    checar(
-        "as tres tabelas somam o total de saidas",
-        sum(t["total_saidas"] for t in resumo["tabelas"].values()),
-        gastos_setembro,
-    )
-    checar(
-        "tabela pessoal agrupa em 3 naturezas",
-        [g["natureza"] for g in resumo["tabelas"]["PESSOAL"]["grupos"]],
-        ["FIXO", "PARCELAMENTO", "AVULSO"],
-    )
-
-    # --- Regras de protecao ----------------------------------------------
-    secao("Regras de protecao")
-
-    checar_erro(
-        "recusa lancamento antes de setembro/2026",
-        lambda: repositorio.criar_lancamento(
-            conn,
-            {
-                "data": "2026-08-15",
-                "descricao": "Gasto antigo",
-                "valor": 1000,
-                "responsavel": "PESSOAL",
-                "meio": "DEBITO",
-            },
-        ),
-        repositorio.ErroValidacao,
-    )
-    checar_erro(
-        "recusa valor zero",
-        lambda: repositorio.criar_lancamento(
-            conn,
-            {"data": "2026-09-10", "descricao": "X", "valor": 0, "responsavel": "PESSOAL"},
-        ),
-        repositorio.ErroValidacao,
-    )
-    checar_erro(
-        "recusa responsavel inventado",
-        lambda: repositorio.criar_lancamento(
-            conn,
-            {"data": "2026-09-10", "descricao": "X", "valor": 100, "responsavel": "CHEFE"},
-        ),
-        repositorio.ErroValidacao,
-    )
-    checar_erro(
-        "recusa saque maior que a caixinha",
-        lambda: repositorio.criar_mov_reserva(
-            conn,
-            {"reserva_id": 1, "data": "2026-09-25", "tipo": "SAQUE", "valor": 99999999},
-        ),
-        repositorio.ErroValidacao,
-    )
-    checar_erro(
-        "recusa pagar fatura com caixinha sem saldo",
-        lambda: repositorio.pagar_fatura(
-            conn,
-            {
-                "fatura_ref": "2026-10",
-                "data": "2026-10-03",
-                "valor": 99999999,
-                "reserva_id": 2,
-            },
-        ),
-        repositorio.ErroValidacao,
-    )
-    checar_erro(
-        "recusa parcelamento pela rota de lancamento simples",
-        lambda: repositorio.criar_lancamento(
-            conn,
-            {
-                "data": "2026-09-10",
-                "descricao": "X",
-                "valor": 100,
-                "responsavel": "PESSOAL",
-                "natureza": "PARCELAMENTO",
-            },
-        ),
-        repositorio.ErroValidacao,
-    )
-
-    # --- Parcelamento em andamento (o caso do setup) ---------------------
-    secao("Parcelamento que ja estava em andamento")
-
-    em_andamento = repositorio.criar_parcelamento(
-        conn,
-        {
-            "descricao": "Celular",
-            "valor_parcela": 20000,
-            "num_parcelas": 10,
-            "parcela_inicial": 4,
-            "responsavel": "PESSOAL",
-            "meio": "CREDITO",
-            "data": "2026-09-10",
-        },
-    )
-    checar("gera so as 7 parcelas que faltam", em_andamento["parcelas_geradas"], 7)
-
-    celular = [
-        p
-        for p in repositorio.listar_lancamentos(conn, {"natureza": "PARCELAMENTO", "limite": 100})
-        if p["descricao"].startswith("Celular")
-    ]
-    checar("primeira parcela gerada e a 4", min(p["parcela_num"] for p in celular), 4)
-    checar("ultima parcela gerada e a 10", max(p["parcela_num"] for p in celular), 10)
-    checar("descricao mostra 4/10", sorted(celular, key=lambda p: p["parcela_num"])[0]["descricao"], "Celular (4/10)")
-
-    # --- Backup e restauracao --------------------------------------------
-    secao("Backup e portabilidade")
-
-    caminho = db.exportar_backup(conn)
-    checar("backup criado", caminho.is_file(), True)
-    checar("backup nao esta vazio", caminho.stat().st_size > 0, True)
-
-    saldo_original = regras.saldo_conta(conn, cfg)["saldo"]
-    conn.close()
-
-    db.importar_backup(caminho)
-    conn = db.conectar()
-    db.inicializar(conn)
-    cfg = regras.carregar_config(conn)
-    checar(
-        "saldo intacto depois de restaurar o backup",
-        regras.saldo_conta(conn, cfg)["saldo"],
-        saldo_original,
-    )
-
-    checar_erro(
-        "recusa importar arquivo que nao e do NuControle",
-        lambda: db.importar_backup(Path(__file__)),
-        Exception,
-    )
-
-    conn.close()
-    regras.fixar_hoje(None)
-
-
-def main() -> int:
-    print(f"\nNuControle -- testes (banco temporario em {_TMP})")
-
-    testar_dinheiro()
-    testar_parcelas()
-    testar_calendario()
-    testar_ciclo_fatura()
-    testar_cenario()
-
-    print("\n" + "=" * 60)
-    if _falhas:
-        print(f"  {len(_falhas)} de {_total} verificacoes FALHARAM:")
-        for f in _falhas:
-            print(f"    - {f}")
-        print("=" * 60 + "\n")
-        return 1
-
-    print(f"  Todas as {_total} verificacoes passaram.")
-    print("=" * 60 + "\n")
-    return 0
+EU = 1
+
+
+class Dinheiro(unittest.TestCase):
+    def test_parse(self):
+        self.assertEqual(parse_centavos("1.234,56"), 123456)
+        self.assertEqual(parse_centavos("1234.56"), 123456)
+        self.assertEqual(parse_centavos("1234"), 123400)
+        self.assertEqual(parse_centavos("0,1"), 10)
+        self.assertEqual(parse_centavos(999), 999)
+        with self.assertRaises(ValueError):
+            parse_centavos(1.5)
+        with self.assertRaises(ValueError):
+            parse_centavos("1,234")  # tres casas decimais
+
+    def test_formatar(self):
+        self.assertEqual(formatar_reais(123456789), "R$ 1.234.567,89")
+        self.assertEqual(formatar_reais(-5), "-R$ 0,05")
+
+    def test_dividir_igual(self):
+        self.assertEqual(dividir_igual(10000, 3), [3334, 3333, 3333])
+        self.assertEqual(dividir_igual(2, 3), [1, 1, 0])
+
+    def test_ratear(self):
+        self.assertEqual(ratear(100, [1, 1, 1]), [34, 33, 33])
+        self.assertEqual(ratear(1000, [3, 1]), [750, 250])
+        self.assertEqual(sum(ratear(99999, [7, 13, 1])), 99999)
+
+    def test_ratear_matriz_exemplo(self):
+        parcelas = dividir_igual(100000, 3)
+        m = ratear_matriz(parcelas, [60000, 40000])
+        self.assertEqual([sum(l) for l in m], parcelas)
+        self.assertEqual([sum(c) for c in zip(*m)], [60000, 40000])
+
+    def test_ratear_matriz_aleatorio(self):
+        rnd = random.Random(42)
+        for _ in range(3000):
+            n = rnd.randint(1, 24)
+            k = rnd.randint(1, 5)
+            total = rnd.randint(n * k, 5_000_00)
+            parcelas = dividir_igual(total, n)
+            partes = ratear(total, [rnd.randint(1, 100) for _ in range(k)])
+            if 0 in partes:
+                continue
+            m = ratear_matriz(parcelas, partes)
+            self.assertEqual([sum(l) for l in m], parcelas)
+            self.assertEqual([sum(c) for c in zip(*m)], partes)
+            for i, linha in enumerate(m):
+                for j, v in enumerate(linha):
+                    self.assertGreaterEqual(v, 0)
+                    exato = parcelas[i] * partes[j] / total
+                    self.assertLess(abs(v - exato), 2.0)
+
+
+class Calendario(unittest.TestCase):
+    def _cobertura(self, fech, venc):
+        d = date(2026, 1, 1)
+        while d < date(2029, 1, 1):
+            r = cal.fatura_de(d, fech, venc)
+            c = cal.ciclo(r, fech, venc)
+            self.assertTrue(c.inicio <= d <= c.fechamento, (d, r, c))
+            self.assertLess(c.fechamento, c.vencimento)
+            anterior = cal.ciclo(cal.somar_ref(r, -1), fech, venc)
+            self.assertEqual(anterior.fechamento + timedelta(days=1), c.inicio)
+            d += timedelta(days=1)
+
+    def test_toda_data_em_uma_fatura(self):
+        self._cobertura(29, 3)
+        self._cobertura(31, 7)
+        self._cobertura(5, 15)
+
+    def test_exemplos(self):
+        self.assertEqual(cal.fatura_de(date(2026, 9, 8), 29, 3), "2026-10")
+        self.assertEqual(cal.fatura_de(date(2026, 9, 30), 29, 3), "2026-11")
+        c = cal.ciclo("2026-10", 29, 3)
+        self.assertEqual((c.inicio, c.fechamento, c.vencimento),
+                         (date(2026, 8, 30), date(2026, 9, 29), date(2026, 10, 3)))
+
+
+class ComBanco(unittest.TestCase):
+    def setUp(self):
+        self.caminho = Path(_TMP.name) / f"{self.id()}.db"
+        self.conn = conectar(self.caminho)
+        fixar_hoje(date(2026, 9, 15))
+        escrita.salvar_config(self.conn, {
+            "dia_fechamento": 29, "dia_vencimento": 3,
+            "saldo_inicial": 1_000_00, "data_inicio": "2026-09-01",
+        })
+        self.fulano = escrita.salvar_dono(self.conn, {"nome": "Fulano", "tipo": "PESSOA", "cor": "#22D3EE"})
+        self.genesys = escrita.salvar_dono(self.conn, {"nome": "Genesys", "tipo": "ORG", "cor": "#FB923C"})
+
+    def tearDown(self):
+        fixar_hoje(None)
+        self.conn.close()
+
+    def compra(self, **kw):
+        dados = {"descricao": "Teste", "fluxo": "SAIDA", "natureza": "AVULSO",
+                 "meio": "CREDITO", "valor": 100_00, "data": "2026-09-10"}
+        dados.update(kw)
+        return escrita.salvar_compra(self.conn, dados)
+
+    def partes_de(self, compra_id):
+        return self.conn.execute(
+            "SELECT l.parcela_num, p.dono_id, p.valor, l.fatura_ref FROM lancamento l "
+            "JOIN lancamento_parte p ON p.lancamento_id = l.id WHERE l.compra_id = ? "
+            "ORDER BY l.data, p.dono_id", (compra_id,)).fetchall()
+
+
+class Divisao(ComBanco):
+    def test_sem_divisao_e_tudo_meu(self):
+        cid = self.compra()
+        self.assertEqual([(r["dono_id"], r["valor"]) for r in self.partes_de(cid)], [(EU, 100_00)])
+
+    def test_igual_centavo_extra_vai_para_mim(self):
+        cid = self.compra(divisao={"modo": "igual", "donos": [self.fulano, self.genesys, EU]})
+        partes = {r["dono_id"]: r["valor"] for r in self.partes_de(cid)}
+        self.assertEqual(partes, {EU: 3334, self.fulano: 3333, self.genesys: 3333})
+
+    def test_valor_precisa_fechar(self):
+        with self.assertRaisesRegex(ErroValidacao, "faltam R\\$ 0,01"):
+            self.compra(divisao={"modo": "valor", "partes": [
+                {"dono_id": EU, "valor": 50_00}, {"dono_id": self.fulano, "valor": 49_99}]})
+        with self.assertRaisesRegex(ErroValidacao, "sobram"):
+            self.compra(divisao={"modo": "valor", "partes": [
+                {"dono_id": EU, "valor": 60_00}, {"dono_id": self.fulano, "valor": 49_99}]})
+
+    def test_terceiro_sem_mim(self):
+        cid = self.compra(divisao={"modo": "igual", "donos": [self.genesys]})
+        self.assertEqual([(r["dono_id"], r["valor"]) for r in self.partes_de(cid)],
+                         [(self.genesys, 100_00)])
+
+    def test_parcelamento_dividido_proporcional(self):
+        cid = self.compra(natureza="PARCELAMENTO", valor=1_000_00, num_parcelas=3,
+                          divisao={"modo": "valor", "partes": [
+                              {"dono_id": EU, "valor": 600_00},
+                              {"dono_id": self.fulano, "valor": 400_00}]})
+        linhas = self.partes_de(cid)
+        por_dono = {}
+        por_parcela = {}
+        for r in linhas:
+            por_dono[r["dono_id"]] = por_dono.get(r["dono_id"], 0) + r["valor"]
+            por_parcela[r["parcela_num"]] = por_parcela.get(r["parcela_num"], 0) + r["valor"]
+        self.assertEqual(por_dono, {EU: 600_00, self.fulano: 400_00})
+        self.assertEqual(por_parcela, {1: 333_34, 2: 333_33, 3: 333_33})
+        faturas = sorted({r["fatura_ref"] for r in linhas})
+        self.assertEqual(faturas, ["2026-10", "2026-11", "2026-12"])
+
+    def test_parcela_inicial(self):
+        cid = self.compra(natureza="PARCELAMENTO", valor=1_200_00, num_parcelas=12,
+                          parcela_inicial=10)
+        nums = [r["parcela_num"] for r in self.partes_de(cid)]
+        self.assertEqual(nums, [10, 11, 12])
+
+    def test_parcelamento_fim_de_mes_nao_repete_fatura(self):
+        cid = self.compra(natureza="PARCELAMENTO", valor=300_00, num_parcelas=3, data="2027-01-30")
+        faturas = [r["fatura_ref"] for r in self.partes_de(cid)]
+        self.assertEqual(faturas, ["2027-03", "2027-04", "2027-05"])
+
+    def test_dono_arquivado_nao_entra_em_compra_nova(self):
+        escrita.arquivar_dono(self.conn, self.fulano, False)
+        with self.assertRaisesRegex(ErroValidacao, "arquivado"):
+            self.compra(divisao={"modo": "igual", "donos": [EU, self.fulano]})
+
+    def test_editar_compra_de_dono_arquivado(self):
+        cid = self.compra(divisao={"modo": "igual", "donos": [EU, self.fulano]})
+        escrita.arquivar_dono(self.conn, self.fulano, False)
+        escrita.salvar_compra(self.conn, {
+            "descricao": "Editada", "fluxo": "SAIDA", "natureza": "AVULSO", "meio": "CREDITO",
+            "valor": 80_00, "data": "2026-09-10",
+            "divisao": {"modo": "igual", "donos": [EU, self.fulano]}}, cid)
+        partes = {r["dono_id"]: r["valor"] for r in self.partes_de(cid)}
+        self.assertEqual(partes, {EU: 40_00, self.fulano: 40_00})
+
+    def test_entrada_e_sempre_minha(self):
+        cid = self.compra(fluxo="ENTRADA", meio="DEBITO",
+                          divisao={"modo": "igual", "donos": [self.fulano]})
+        self.assertEqual([r["dono_id"] for r in self.partes_de(cid)], [EU])
+
+
+class Fixos(ComBanco):
+    def refs(self, cid):
+        return [r[0] for r in self.conn.execute(
+            "SELECT ref FROM lancamento WHERE compra_id = ? ORDER BY ref", (cid,))]
+
+    def test_gera_ate_dois_meses_a_frente(self):
+        cid = self.compra(natureza="FIXO", valor=55_90, data="2026-08-05")
+        self.assertEqual(self.refs(cid), ["2026-08", "2026-09", "2026-10", "2026-11"])
+        fixar_hoje(date(2027, 1, 2))
+        escrita.garantir_fixos(self.conn)
+        self.assertEqual(self.refs(cid)[-1], "2027-03")
+
+    def test_gera_ate_o_mes_visitado(self):
+        cid = self.compra(natureza="FIXO", valor=55_90, data="2026-09-05")
+        escrita.garantir_fixos(self.conn, "2027-02")
+        self.assertEqual(self.refs(cid)[-1], "2027-02")
+        escrita.garantir_fixos(self.conn, "2099-01")  # teto de 3 anos
+        self.assertEqual(self.refs(cid)[-1], "2029-09")
+        from nucontrole.ponte import Api
+        self.assertTrue(Api().mes("2027-03")["ok"])
+
+    def test_pular_mes_nao_volta(self):
+        cid = self.compra(natureza="FIXO", valor=55_90, data="2026-09-05")
+        lid = self.conn.execute(
+            "SELECT id FROM lancamento WHERE compra_id = ? AND ref = '2026-10'", (cid,)).fetchone()[0]
+        escrita.pular_mes_fixo(self.conn, lid)
+        fixar_hoje(date(2026, 12, 1))
+        escrita.garantir_fixos(self.conn)
+        self.assertNotIn("2026-10", self.refs(cid))
+        self.assertIn("2027-02", self.refs(cid))
+
+    def test_editar_fixo_mantem_passado(self):
+        cid = self.compra(natureza="FIXO", valor=50_00, data="2026-07-05", meio="DEBITO")
+        escrita.salvar_compra(self.conn, {
+            "descricao": "Aluguel", "fluxo": "SAIDA", "natureza": "FIXO", "meio": "DEBITO",
+            "valor": 80_00, "data": "2026-07-05",
+            "divisao": {"modo": "igual", "donos": [EU, self.fulano]}}, cid)
+        valores = dict(self.conn.execute(
+            "SELECT ref, valor FROM lancamento WHERE compra_id = ?", (cid,)).fetchall())
+        self.assertEqual(valores["2026-07"], 50_00)
+        self.assertEqual(valores["2026-08"], 50_00)
+        self.assertEqual(valores["2026-09"], 80_00)
+        self.assertEqual(valores["2026-11"], 80_00)
+
+    def test_encerrar(self):
+        cid = self.compra(natureza="FIXO", valor=50_00, data="2026-09-05")
+        escrita.encerrar_fixo(self.conn, cid, "2026-10")
+        fixar_hoje(date(2027, 3, 1))
+        escrita.garantir_fixos(self.conn)
+        self.assertEqual(self.refs(cid), ["2026-09", "2026-10"])
+
+    def test_fixo_dividido(self):
+        cid = self.compra(natureza="FIXO", valor=100_01, data="2026-09-05",
+                          divisao={"modo": "igual", "donos": [EU, self.fulano]})
+        partes = self.partes_de(cid)
+        self.assertEqual({(r["dono_id"], r["valor"]) for r in partes},
+                         {(EU, 50_01), (self.fulano, 50_00)})
+
+
+class Saldo(ComBanco):
+    def saldo(self):
+        return consultas.conta(self.conn, consultas.Config.ler(self.conn))["saldo"]
+
+    def test_credito_nao_move_saldo(self):
+        self.compra(meio="CREDITO", valor=500_00)
+        self.assertEqual(self.saldo(), 1_000_00)
+
+    def test_debito_move_so_ate_hoje(self):
+        self.compra(meio="DEBITO", valor=100_00, data="2026-09-10")
+        self.compra(meio="DEBITO", valor=50_00, data="2026-09-20")
+        self.assertEqual(self.saldo(), 900_00)
+        conta = consultas.conta(self.conn, consultas.Config.ler(self.conn))
+        self.assertEqual(conta["a_sair_debito"], 50_00)
+
+    def test_antes_do_inicio_nao_conta(self):
+        self.compra(meio="DEBITO", valor=100_00, data="2026-08-31")
+        self.assertEqual(self.saldo(), 1_000_00)
+
+    def test_divisao_nao_muda_saldo(self):
+        self.compra(meio="DEBITO", valor=300_00,
+                    divisao={"modo": "igual", "donos": [EU, self.fulano, self.genesys]})
+        self.assertEqual(self.saldo(), 700_00)
+
+    def test_previsao_por_mes(self):
+        # hoje 15/09, saldo inicial 1.000
+        self.compra(natureza="FIXO", meio="DEBITO", valor=100_00, data="2026-09-20")
+        self.compra(meio="CREDITO", valor=200_00, data="2026-09-10")  # fatura 2026-10, vence 03/10
+        cfg = consultas.Config.ler(self.conn)
+        setembro = consultas.conta(self.conn, cfg, "2026-09")
+        self.assertEqual(setembro["saldo"], 1_000_00)
+        self.assertEqual(setembro["previsao_fim_mes"], 900_00)
+        self.assertEqual(setembro["a_sair_mes"], 100_00)
+        outubro = consultas.conta(self.conn, cfg, "2026-10")
+        self.assertEqual(outubro["saldo"], 1_000_00)  # saldo e sempre o de hoje
+        self.assertEqual(outubro["a_sair_fatura"], 200_00)
+        self.assertEqual(outubro["a_sair_debito"], 100_00)
+        self.assertEqual(outubro["previsao_fim_mes"], 1_000_00 - 100_00 - 100_00 - 200_00)
+        # pagar a fatura antes nao muda a previsao de outubro (so troca de lado)
+        escrita.pagar_fatura(self.conn, {"fatura_ref": "2026-10", "valor": 200_00, "data": "2026-10-03"})
+        self.assertEqual(consultas.conta(self.conn, cfg, "2026-10")["previsao_fim_mes"], 600_00)
+        agosto = consultas.conta(self.conn, cfg, "2026-08")
+        self.assertTrue(agosto["mes_passado"])
+        self.assertEqual(agosto["previsao_fim_mes"], 1_000_00)
+
+    def test_visao_geral_de_outro_mes(self):
+        self.compra(valor=100_00, data="2026-10-05", divisao={"modo": "igual", "donos": [EU, self.fulano]})
+        v = consultas.visao_geral(self.conn, "2026-10")
+        self.assertFalse(v["mes_atual"])
+        self.assertEqual(v["fatura"]["ref"], "2026-10")
+        self.assertEqual({g["dono"]["id"]: g["total"] for g in v["gastos_por_dono"]},
+                         {EU: 50_00, self.fulano: 50_00})
+
+    def test_pagamento_e_caixinhas(self):
+        escrita.pagar_fatura(self.conn, {"fatura_ref": "2026-09", "valor": 200_00, "data": "2026-09-03"})
+        rid = escrita.salvar_reserva(self.conn, {"nome": "Reserva", "tipo": "CAIXINHA", "saldo_inicial": 50_00})
+        escrita.criar_mov_reserva(self.conn, {"reserva_id": rid, "tipo": "DEPOSITO", "valor": 300_00, "data": "2026-09-05"})
+        escrita.criar_mov_reserva(self.conn, {"reserva_id": rid, "tipo": "SAQUE", "valor": 100_00, "data": "2026-09-06"})
+        escrita.criar_mov_reserva(self.conn, {"reserva_id": rid, "tipo": "RENDIMENTO", "valor": 1_23, "data": "2026-09-07"})
+        self.assertEqual(self.saldo(), 1_000_00 - 200_00 - 300_00 + 100_00)
+        r = consultas.reservas(self.conn)["reservas"][0]
+        self.assertEqual(r["saldo"], 50_00 + 300_00 - 100_00 + 1_23)
+        with self.assertRaisesRegex(ErroValidacao, "insuficiente"):
+            escrita.criar_mov_reserva(self.conn, {"reserva_id": rid, "tipo": "SAQUE", "valor": 999_00, "data": "2026-09-08"})
+
+
+class Telas(ComBanco):
+    def test_mes_por_dono(self):
+        self.compra(valor=300_00, divisao={"modo": "igual", "donos": [EU, self.fulano, self.genesys]})
+        self.compra(valor=40_00, natureza="AVULSO", divisao={"modo": "igual", "donos": [self.genesys]})
+        m = consultas.mes(self.conn, "2026-09")
+        totais = {a["dono"]["id"]: a["total"] for a in m["abas"]}
+        self.assertEqual(totais, {EU: 100_00, self.fulano: 100_00, self.genesys: 140_00})
+        self.assertEqual(m["total_saidas"], 340_00)
+
+    def test_fatura_por_dono_fecha_com_total(self):
+        self.compra(valor=300_00, divisao={"modo": "igual", "donos": [EU, self.fulano, self.genesys]})
+        self.compra(valor=99_99, natureza="PARCELAMENTO", num_parcelas=4,
+                    divisao={"modo": "igual", "donos": [EU, self.fulano]})
+        f = consultas.fatura(self.conn, "2026-10")
+        self.assertEqual(sum(g["valor"] for g in f["por_dono"]), f["total"])
+        self.assertEqual(f["por_dono"][0]["dono_id"], EU)
+        self.assertEqual(f["status"], "aberta")
+        self.assertEqual(f["de_terceiros"], f["total"] - f["por_dono"][0]["valor"])
+
+    def test_status_fatura(self):
+        self.compra(valor=100_00, data="2026-08-10")  # fatura 2026-09, vence 03/09
+        self.assertEqual(consultas.fatura(self.conn, "2026-09")["status"], "vencida")
+        escrita.pagar_fatura(self.conn, {"fatura_ref": "2026-09", "valor": 100_00, "data": "2026-09-03"})
+        self.assertEqual(consultas.fatura(self.conn, "2026-09")["status"], "paga")
+
+    def test_fatura_antes_do_controle_nao_e_pendencia(self):
+        self.compra(valor=100_00, data="2026-07-10")  # fatura 2026-08, vence 03/08 < inicio 01/09
+        self.assertEqual(consultas.fatura(self.conn, "2026-08")["status"], "anterior")
+        self.assertEqual(consultas.visao_geral(self.conn)["faturas_pendentes"], 0)
+
+    def test_visao_geral_roda(self):
+        self.compra(valor=100_00, divisao={"modo": "igual", "donos": [EU, self.fulano]})
+        v = consultas.visao_geral(self.conn)
+        self.assertEqual(v["fatura"]["ref"], "2026-10")
+        self.assertEqual(v["patrimonio"], v["conta"]["saldo"])
+
+    def test_mudar_ciclo_recalcula_faturas(self):
+        cid = self.compra(valor=100_00, data="2026-09-10")
+        escrita.salvar_config(self.conn, {"dia_fechamento": 5, "dia_vencimento": 15,
+                                          "saldo_inicial": 0, "data_inicio": "2026-09-01"})
+        self.assertEqual(self.partes_de(cid)[0]["fatura_ref"], "2026-10")
+        escrita.salvar_config(self.conn, {"dia_fechamento": 8, "dia_vencimento": 15,
+                                          "saldo_inicial": 0, "data_inicio": "2026-09-01"})
+        self.assertEqual(self.partes_de(cid)[0]["fatura_ref"], "2026-10")
+
+
+class Donos(ComBanco):
+    def test_nao_exclui_dono_usado(self):
+        self.compra(divisao={"modo": "igual", "donos": [self.fulano]})
+        with self.assertRaisesRegex(ErroValidacao, "Arquive"):
+            escrita.excluir_dono(self.conn, self.fulano)
+        escrita.excluir_dono(self.conn, self.genesys)
+
+    def test_eu_e_protegido(self):
+        with self.assertRaises(ErroValidacao):
+            escrita.excluir_dono(self.conn, EU)
+        with self.assertRaises(ErroValidacao):
+            escrita.arquivar_dono(self.conn, EU, False)
+
+    def test_nome_unico_sem_caixa(self):
+        with self.assertRaisesRegex(ErroValidacao, "Já existe"):
+            escrita.salvar_dono(self.conn, {"nome": "fulano", "tipo": "PESSOA", "cor": "#FFFFFF"})
+
+
+class Backup(ComBanco):
+    def test_exportar_e_restaurar(self):
+        from nucontrole import backup
+        self.compra(descricao="Antes do backup", divisao={"modo": "igual", "donos": [EU, self.fulano]})
+        arquivo = backup.exportar(self.conn, Path(_TMP.name) / "bk" / "meu_backup")
+        self.assertEqual(arquivo.suffix, ".db")  # extensao acrescentada
+        resumo = backup.validar(arquivo)
+        self.assertEqual((resumo["compras"], resumo["terceiros"]), (1, 2))
+
+        # depois do backup: apaga um terceiro e cria outra compra
+        escrita.excluir_dono(self.conn, self.genesys)
+        self.compra(descricao="Depois do backup")
+        copia = backup.restaurar(self.conn, arquivo)
+
+        descricoes = [r[0] for r in self.conn.execute("SELECT descricao FROM compra")]
+        self.assertEqual(descricoes, ["Antes do backup"])
+        self.assertEqual(self.conn.execute("SELECT COUNT(*) FROM dono").fetchone()[0], 3)
+        # a copia de seguranca tem o estado de ANTES de restaurar
+        self.assertEqual(backup.validar(copia)["compras"], 2)
+        # e o banco restaurado continua funcionando normalmente
+        self.compra(descricao="Depois de restaurar")
+        self.assertEqual(consultas.fatura(self.conn, "2026-10")["total"], 200_00)
+
+    def test_recusa_arquivos_errados(self):
+        from nucontrole import backup
+        lixo = Path(_TMP.name) / "lixo.db"
+        lixo.write_bytes(b"isto nao e um banco" * 100)
+        with self.assertRaisesRegex(ErroValidacao, "não é um banco"):
+            backup.validar(lixo)
+        v1 = Path(_TMP.name) / "v1.db"
+        c = __import__("sqlite3").connect(v1)
+        c.executescript("CREATE TABLE config(a); CREATE TABLE lancamento(a); CREATE TABLE reserva(a);")
+        c.close()
+        with self.assertRaisesRegex(ErroValidacao, "versão 1"):
+            backup.validar(v1)
+        with self.assertRaisesRegex(ErroValidacao, "não encontrado"):
+            backup.validar(Path(_TMP.name) / "nao_existe.db")
+
+
+class Ponte(unittest.TestCase):
+    def test_envelope(self):
+        from nucontrole.ponte import Api
+        api = Api()
+        self.assertTrue(api.estado()["ok"])
+        r = api.salvar_compra({"descricao": "", "valor": 100})
+        self.assertEqual(r, {"ok": False, "erro": "Informe a descrição."})
+        self.assertTrue(api.visao_geral()["ok"])
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    unittest.main(verbosity=1)
