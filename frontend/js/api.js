@@ -77,7 +77,7 @@ export function criarApi(servidor) {
     /* -------------------------------------------------------- leitura */
     estado: () => ler((b) => consultas.estado(b)),
     visaoGeral: (ref = null) => ler((b) => consultas.visaoGeral(b, ref), ref),
-    mes: (ref) => ler((b) => consultas.mes(b, ref), ref),
+    mes: (ref, meio = null) => ler((b) => consultas.mes(b, ref, meio), ref),
     faturas: (incluir = null) => ler((b) => consultas.faturas(b, incluir), incluir),
     fatura: (ref) => ler((b) => consultas.fatura(b, ref), ref),
     reservas: () => ler((b) => consultas.reservas(b)),

@@ -326,6 +326,33 @@ describe("com conta", () => {
       assert.equal(m.total_saidas, 340_00);
     });
 
+    test("mes filtrado por credito ou debito", () => {
+      c.compra({ meio: "CREDITO", valor: 300_00, divisao: { modo: "igual", donos: [c.eu, fulano] } });
+      c.compra({ meio: "DEBITO", valor: 40_00, natureza: "FIXO", data: "2026-09-12" });
+      c.compra({ meio: "DEBITO", valor: 10_00, divisao: { modo: "igual", donos: [fulano] } });
+      c.compra({ fluxo: "ENTRADA", meio: "DEBITO", valor: 5_000_00 });
+      const total = (m, dono) => m.abas.find((a) => a.dono.id === dono).total;
+
+      const todos = consultas.mes(c.banco, "2026-09");
+      const credito = consultas.mes(c.banco, "2026-09", "CREDITO");
+      const debito = consultas.mes(c.banco, "2026-09", "DEBITO");
+      assert.equal(total(todos, c.eu), 150_00 + 40_00);
+      assert.equal(total(credito, c.eu), 150_00);
+      assert.equal(total(debito, c.eu), 40_00);
+      assert.equal(total(credito, fulano), 150_00);
+      assert.equal(total(debito, fulano), 10_00);
+      // grupos, categorias e contagem seguem o filtro
+      const eu = debito.abas.find((a) => a.dono.id === c.eu);
+      assert.equal(eu.grupos.FIXO.total, 40_00);
+      assert.equal(eu.grupos.AVULSO.itens.length, 0);
+      assert.equal(eu.quantidade, 1);
+      assert.equal(eu.categorias.reduce((s, g) => s + g.valor, 0), 40_00);
+      assert.ok(credito.abas.every((a) => Object.values(a.grupos).every((g) => g.itens.every((i) => i.meio === "CREDITO"))));
+      // entradas nao sao filtradas
+      assert.equal(credito.entradas.total, 5_000_00);
+      assert.throws(() => consultas.mes(c.banco, "2026-09", "PIX"), ErroValidacao);
+    });
+
     test("fatura por dono fecha com o total", () => {
       c.compra({ valor: 300_00, divisao: { modo: "igual", donos: [c.eu, fulano, genesys] } });
       c.compra({ valor: 99_99, natureza: "PARCELAMENTO", num_parcelas: 4, divisao: { modo: "igual", donos: [c.eu, fulano] } });

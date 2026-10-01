@@ -253,11 +253,15 @@ function porCategoria(itens, campoValor) {
 
     Cada dono ve SO a parte dele de cada compra, com a informacao de com quem
     ela foi dividida. Uma compra de R$ 300 dividida em 3 aparece como R$ 100
-    nas tres abas. */
-export function mes(db, ref) {
+    nas tres abas.
+
+    `meio` ("CREDITO" ou "DEBITO") filtra as saidas: abas, grupos, totais e
+    categorias passam a contar so aquele meio. As entradas nao mudam. */
+export function mes(db, ref, meio = null) {
   cal.partes(ref);
+  if (meio !== null && meio !== "CREDITO" && meio !== "DEBITO") throw new ErroValidacao("Meio de pagamento inválido.");
   const lancs = comPartes(db, indice(db).lancPorRef.get(ref) || []);
-  const saidas = lancs.filter((l) => l.fluxo === "SAIDA");
+  const saidas = lancs.filter((l) => l.fluxo === "SAIDA" && (meio === null || l.meio === meio));
   const entradas = lancs.filter((l) => l.fluxo === "ENTRADA");
   const h = hoje();
 

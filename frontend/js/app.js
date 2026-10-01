@@ -4,7 +4,8 @@
 const App = {
   estado: null,       // config, donos, categorias, hoje... (vem de api.estado)
   tela: "visao",
-  ui: { mes: null, aba: null, fatura: null, donoFatura: null }, // aba: id do dono ou "entradas"
+  // aba: id do dono ou "entradas"; meio: filtro dos gastos (null = todos, "CREDITO", "DEBITO")
+  ui: { mes: null, aba: null, fatura: null, donoFatura: null, meio: null },
   _geracao: 0,
 
   async iniciar() {

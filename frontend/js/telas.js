@@ -146,7 +146,7 @@ const Telas = {
   /* ============================================================ Gastos do mes */
   async gastos(el) {
     const ui = App.ui;
-    const m = await api.mes(ui.mes);
+    const m = await api.mes(ui.mes, ui.meio || null);
     App.cabecalho(`Gastos de ${m.rotulo}`, "Cada aba mostra só a parte daquele dono em cada compra · troque o mês na barra lateral");
 
     if (!m.abas.some((a) => a.dono.id === ui.aba) && ui.aba !== "entradas") ui.aba = App.estado.id_eu;
@@ -164,12 +164,27 @@ const Telas = {
     } else {
       corpo = this._abaDono(m.abas.find((a) => a.dono.id === ui.aba), m);
     }
-    el.innerHTML = `<div class="abas" id="abas">${abas}</div>${corpo}`;
+    // filtro por meio de pagamento: vale para as abas dos donos (entradas sao sempre na conta)
+    const filtro = ui.aba === "entradas" ? "" : `
+      <div class="filtro-meio">
+        <span>Mostrar</span>
+        <div class="segmento" id="filtro-meio" role="group" aria-label="Filtrar por meio de pagamento">
+          ${[["", "Todos"], ["CREDITO", "Crédito"], ["DEBITO", "Débito/Pix"]].map(([v, t]) =>
+            `<button type="button" data-meio="${v}" class="${(ui.meio || "") === v ? "ativo" : ""}" aria-pressed="${(ui.meio || "") === v}">${t}</button>`).join("")}
+        </div>
+      </div>`;
+    el.innerHTML = `<div class="abas" id="abas">${abas}</div>${filtro}${corpo}`;
 
     $("#abas", el).addEventListener("click", (ev) => {
       const b = ev.target.closest("[data-aba]");
       if (!b) return;
       ui.aba = b.dataset.aba;
+      App.recarregar();
+    });
+    $("#filtro-meio", el)?.addEventListener("click", (ev) => {
+      const b = ev.target.closest("[data-meio]");
+      if (!b) return;
+      ui.meio = b.dataset.meio || null;
       App.recarregar();
     });
     ligarAcoesLanc(el);
@@ -180,6 +195,8 @@ const Telas = {
 
   _abaDono(a, m) {
     const d = a.dono;
+    const meio = App.ui.meio;
+    const noMeio = meio === "CREDITO" ? " no crédito" : meio === "DEBITO" ? " no débito/pix" : "";
     const secoes = ["FIXO", "PARCELAMENTO", "AVULSO"].map((n) => {
       const g = a.grupos[n];
       const linhas = g.itens.map((l) => `
@@ -197,7 +214,7 @@ const Telas = {
             <th class="c-data">Data</th><th>Descrição</th><th class="c-meio">Meio</th><th class="c-div">Dividido com</th>
             <th class="num c-valor">Parte</th><th class="c-acoes"></th>
           </tr></thead><tbody>${linhas}</tbody></table>`
-          : `<div class="nota" style="padding:4px 10px 8px">Nada em ${esc(NATUREZA_ROTULO[n].toLowerCase())}.</div>`}
+          : `<div class="nota" style="padding:4px 10px 8px">Nada em ${esc(NATUREZA_ROTULO[n].toLowerCase())}${noMeio}.</div>`}
       </div>`;
     }).join("");
 
@@ -213,14 +230,14 @@ const Telas = {
         </div>
         <div style="display:flex;flex-direction:column;gap:20px">
           <div class="grade grade-tiles" style="grid-template-columns:1fr">
-            <div class="tile destaque"><div class="tile-rotulo">Total de ${esc(d.nome)} no mês</div>
+            <div class="tile destaque"><div class="tile-rotulo">Total de ${esc(d.nome)}${noMeio || " no mês"}</div>
               <div class="tile-valor">${reais(a.total)}</div>
               <div class="tile-extra">${a.quantidade} lançamento(s)</div></div>
-            <div class="tile"><div class="tile-rotulo">No crédito · no débito/pix</div>
-              <div class="tile-valor" style="font-size:18px">${reais(a.total_credito)} · ${reais(a.total_debito)}</div></div>
+            ${meio ? "" : `<div class="tile"><div class="tile-rotulo">No crédito · no débito/pix</div>
+              <div class="tile-valor" style="font-size:18px">${reais(a.total_credito)} · ${reais(a.total_debito)}</div></div>`}
           </div>
-          <div class="card"><div class="card-topo"><h3>Por categoria</h3></div>
-            ${Graficos.barrasOrdenadas(cats, { vazio: "Sem gastos neste mês." })}</div>
+          <div class="card"><div class="card-topo"><h3>Por categoria${noMeio}</h3></div>
+            ${Graficos.barrasOrdenadas(cats, { vazio: `Sem gastos${noMeio} neste mês.` })}</div>
         </div>
       </div>`;
   },
