@@ -407,6 +407,10 @@ label.btn { position: relative; }
 .barra-movel, .btn-flutuante, .gaveta-fundo { display: none; }
 .lateral { overflow-y: auto; }
 
+/* instalado na tela de inicio (iPad na horizontal): nao ficar embaixo do relogio */
+.lateral { padding-top: max(22px, calc(env(safe-area-inset-top) + 8px)); padding-left: max(14px, env(safe-area-inset-left)); }
+.principal { padding-top: max(26px, calc(env(safe-area-inset-top) + 12px)); padding-right: max(34px, env(safe-area-inset-right)); }
+
 /* sem mouse (toque): os botoes de acao das tabelas ficam sempre visiveis */
 @media (hover: none) {
   .tabela .acoes .btn-icone { opacity: 1; }
@@ -452,7 +456,7 @@ label.btn { position: relative; }
   }
   .btn-flutuante svg { width: 26px; height: 26px; }
 
-  .principal { overflow: visible; padding: 18px 14px 100px; }
+  .principal { overflow: visible; padding: 18px 14px 100px; padding-top: 18px; }
   .topo { margin-bottom: 16px; }
   .topo h1 { font-size: 22px; }
   .conteudo { gap: 14px; }
