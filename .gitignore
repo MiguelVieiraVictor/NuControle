@@ -1,8 +1,25 @@
+# dependencias e bibliotecas copiadas (o deploy gera de novo)
+node_modules/
+frontend/vendor/
+
+# configuracao do Supabase: gerada no deploy a partir das variaveis do GitHub
+frontend/js/config.js
+.env
+.env.*
+
+# bancos e backups de dados reais nunca entram no git
+*.db
+*.sqlite
+nucontrole_*.json
+!testes/fixtures/*.db
+
+# ferramentas
+.playwright-mcp/
 __pycache__/
 *.pyc
-*.db
+.venv/
+
+# sobras do build do app desktop (PyInstaller)
 build/
 dist/
 *.spec
-.playwright-mcp/
-.venv/

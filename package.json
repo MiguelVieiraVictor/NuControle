@@ -1,0 +1,15 @@
+{
+  "name": "nucontrole",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test \"testes/*.test.js\"",
+    "vendor": "node ferramentas/copiar-vendor.mjs",
+    "dev": "node ferramentas/servidor-local.mjs"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "^0.5.8",
+    "@supabase/supabase-js": "^2.117.2",
+    "sql.js": "^1.14.2"
+  }
+}

@@ -1,34 +1,54 @@
-/* Estado global, navegacao e ciclo de renderizacao. */
+/* Estado global, navegacao e ciclo de renderizacao.
+   Quem chama App.iniciar() e o principal.js, depois do login. */
 
 const App = {
   estado: null,       // config, donos, categorias, hoje... (vem de api.estado)
   tela: "visao",
-  ui: { mes: null, aba: 1, fatura: null, donoFatura: null },
+  ui: { mes: null, aba: null, fatura: null, donoFatura: null }, // aba: id do dono ou "entradas"
   _geracao: 0,
 
   async iniciar() {
     try {
       await this.recarregarEstado();
     } catch (e) {
-      $("#conteudo").innerHTML = `<div class="card vazio">Não foi possível abrir o banco de dados.<br><span class="nota">${esc(e.message)}</span></div>`;
+      $("#conteudo").innerHTML = `<div class="card vazio">Não foi possível carregar seus dados.<br><span class="nota">${esc(e.message)}</span></div>`;
       return;
     }
     this.ui.mes = this.estado.mes_atual;
+    this.ui.aba = this.estado.id_eu;
 
     $("#nav").addEventListener("click", (ev) => {
       const b = ev.target.closest("[data-tela]");
-      if (b) this.ir(b.dataset.tela);
+      if (b) {
+        this.menu(false);
+        this.ir(b.dataset.tela);
+      }
     });
-    $("#btn-novo").addEventListener("click", () => {
-      const dono = this.tela === "gastos" && typeof this.ui.aba === "number" ? this.ui.aba : null;
+    const novo = () => {
+      this.menu(false);
+      const naAba = this.tela === "gastos" && this.ui.aba !== "entradas";
+      const dono = naAba ? this.ui.aba : null;
       const fluxo = this.tela === "gastos" && this.ui.aba === "entradas" ? "ENTRADA" : "SAIDA";
       FormLancamento.abrir({ dono, fluxo }).catch((e) => avisar(e.message, "erro"));
-    });
-    $("#sel-mes-global").addEventListener("click", (ev) => {
+    };
+    $("#btn-novo").addEventListener("click", novo);
+    $("#btn-novo-movel").addEventListener("click", novo);
+    $$("[data-sel-mes]").forEach((sel) => sel.addEventListener("click", (ev) => {
       const b = ev.target.closest("[data-delta]");
       if (b) this.mudarMes(somarMes(this.ui.mes, Number(b.dataset.delta)));
+    }));
+    $("#mes-hoje").addEventListener("click", () => {
+      this.menu(false);
+      this.mudarMes(this.estado.mes_atual);
     });
-    $("#mes-hoje").addEventListener("click", () => this.mudarMes(this.estado.mes_atual));
+
+    // menu do celular (a barra lateral vira uma gaveta)
+    $("#btn-menu").addEventListener("click", () => this.menu(!document.body.classList.contains("menu-aberto")));
+    $("#gaveta-fundo").addEventListener("click", () => this.menu(false));
+    document.addEventListener("keydown", (ev) => { if (ev.key === "Escape") this.menu(false); });
+
+    $("#usuario-email").textContent = Sessao.email;
+    $("#btn-sair").addEventListener("click", () => Sessao.sair());
     document.addEventListener("keydown", (ev) => {
       if ($("#modal").open) return;
       if (ev.key.toLowerCase() === "n" && ev.ctrlKey) {
@@ -56,10 +76,17 @@ const App = {
     this.recarregar();
   },
 
+  /** Abre/fecha a gaveta do menu (so tem efeito visual no celular). */
+  menu(aberto) {
+    document.body.classList.toggle("menu-aberto", aberto);
+    $("#gaveta-fundo").hidden = !aberto;
+    $("#btn-menu").setAttribute("aria-expanded", String(aberto));
+  },
+
   _desenharMes() {
     const outro = this.ui.mes !== this.estado.mes_atual;
-    $("#mes-global-nome").textContent = rotuloMes(this.ui.mes);
-    $(".mes-global").classList.toggle("outro-mes", outro);
+    $$(".js-mes-nome").forEach((el) => { el.textContent = rotuloMes(this.ui.mes); });
+    $$("[data-sel-mes]").forEach((el) => el.classList.toggle("outro-mes", outro));
     $("#mes-hoje").hidden = !outro;
   },
 
@@ -91,9 +118,11 @@ const App = {
     try {
       await Telas[this.tela](novo);
       if (geracao !== this._geracao) return; // outra renderizacao comecou depois
-      const rolagem = $(".principal").scrollTop;
+      // no computador quem rola e o .principal; no celular, a pagina
+      const rolagem = [$(".principal").scrollTop, window.scrollY];
       antigo.replaceWith(novo);
-      $(".principal").scrollTop = rolagem;
+      $(".principal").scrollTop = rolagem[0];
+      window.scrollTo(0, rolagem[1]);
     } catch (e) {
       if (geracao !== this._geracao) return;
       console.error(e);
@@ -109,4 +138,3 @@ const App = {
   },
 };
 
-document.addEventListener("DOMContentLoaded", () => App.iniciar());

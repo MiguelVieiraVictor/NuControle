@@ -2,9 +2,20 @@
 <html lang="pt-BR">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <!-- So carrega o que esta neste site; so conversa com o Supabase. -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self' https://*.supabase.co wss://*.supabase.co; object-src 'none'; base-uri 'self'; form-action 'self';">
+  <meta name="referrer" content="no-referrer">
+  <meta name="theme-color" content="#0E0B14">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="NuControle">
+  <meta name="description" content="Controle de finanças pessoais">
   <title>NuControle</title>
   <link rel="icon" type="image/png" href="img/icone.png">
+  <link rel="apple-touch-icon" href="img/icone-180.png">
+  <link rel="manifest" href="manifest.webmanifest">
   <link rel="stylesheet" href="css/app.css">
 </head>
 <body>
@@ -26,12 +37,62 @@
       <symbol id="i-fim" viewBox="0 0 24 24"><rect x="6.5" y="6.5" width="11" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
       <symbol id="i-arquivo" viewBox="0 0 24 24"><path d="M4 5h16v4H4zM5.5 9v10h13V9M10 13h4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/></symbol>
       <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+      <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
       <symbol id="i-dividir" viewBox="0 0 24 24"><path d="M12 3v18M7 8H4.5M7 16H4.5M19.5 8H17M19.5 16H17" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
     </defs>
   </svg>
 
-  <div class="app">
-    <aside class="lateral">
+  <!-- Entrar / esqueci a senha / criar senha (convite) -->
+  <section class="entrada" id="entrada">
+    <div class="entrada-caixa">
+      <div class="marca entrada-marca">
+        <img class="marca-logo" src="img/icone.png" alt="" aria-hidden="true">
+        <span class="marca-nome">NuControle</span>
+      </div>
+      <p class="entrada-msg" id="entrada-msg" role="alert" hidden></p>
+
+      <form class="form" id="form-login" hidden>
+        <label class="campo"><span>E-mail</span>
+          <input class="input" type="email" id="login-email" autocomplete="username" required></label>
+        <label class="campo"><span>Senha</span>
+          <input class="input" type="password" id="login-senha" autocomplete="current-password" required></label>
+        <button class="btn btn-primario btn-largo" type="submit">Entrar</button>
+        <a href="#" class="link" id="link-esqueci">Esqueci minha senha</a>
+        <p class="nota">O acesso é só por convite. Peça um ao administrador.</p>
+      </form>
+
+      <form class="form" id="form-esqueci" hidden>
+        <p class="nota">Enviamos um link para você criar uma senha nova.</p>
+        <label class="campo"><span>E-mail</span>
+          <input class="input" type="email" id="esqueci-email" autocomplete="username" required></label>
+        <button class="btn btn-primario btn-largo" type="submit">Enviar link</button>
+        <a href="#" class="link" id="link-voltar">Voltar para entrar</a>
+      </form>
+
+      <form class="form" id="form-senha" hidden>
+        <label class="campo"><span>Nova senha</span>
+          <input class="input" type="password" id="senha-nova" autocomplete="new-password" minlength="8" required>
+          <small>Pelo menos 8 caracteres.</small></label>
+        <label class="campo"><span>Repita a senha</span>
+          <input class="input" type="password" id="senha-confirma" autocomplete="new-password" minlength="8" required></label>
+        <button class="btn btn-primario btn-largo" type="submit">Salvar senha e entrar</button>
+      </form>
+    </div>
+  </section>
+
+  <div class="app" id="app" hidden>
+    <!-- So no celular: barra do topo com o menu e o mes -->
+    <header class="barra-movel">
+      <button class="btn-icone" id="btn-menu" aria-label="Abrir menu" aria-expanded="false" aria-controls="lateral"><svg><use href="#i-menu"/></svg></button>
+      <div class="seletor-mes" data-sel-mes>
+        <button class="btn-icone" data-delta="-1" aria-label="Mês anterior"><svg><use href="#i-esq"/></svg></button>
+        <span class="js-mes-nome"></span>
+        <button class="btn-icone" data-delta="1" aria-label="Próximo mês"><svg><use href="#i-dir"/></svg></button>
+      </div>
+    </header>
+    <div class="gaveta-fundo" id="gaveta-fundo" hidden></div>
+
+    <aside class="lateral" id="lateral">
       <div class="marca">
         <img class="marca-logo" src="img/icone.png" alt="" aria-hidden="true">
         <span class="marca-nome">NuControle</span>
@@ -46,9 +107,9 @@
       </nav>
       <div class="mes-global">
         <span class="mes-global-rotulo">Mês</span>
-        <div class="seletor-mes" id="sel-mes-global">
+        <div class="seletor-mes" data-sel-mes>
           <button class="btn-icone" data-delta="-1" aria-label="Mês anterior" data-dica="Mês anterior (Ctrl+←)"><svg><use href="#i-esq"/></svg></button>
-          <span id="mes-global-nome"></span>
+          <span class="js-mes-nome"></span>
           <button class="btn-icone" data-delta="1" aria-label="Próximo mês" data-dica="Próximo mês (Ctrl+→)"><svg><use href="#i-dir"/></svg></button>
         </div>
         <button class="mes-hoje" id="mes-hoje" hidden>Voltar para hoje</button>
@@ -56,6 +117,10 @@
       <button class="btn btn-primario btn-novo" id="btn-novo">
         <svg><use href="#i-mais"/></svg>Novo lançamento
       </button>
+      <div class="conta-usuario">
+        <span class="nota" id="usuario-email"></span>
+        <button class="link" id="btn-sair">Sair</button>
+      </div>
     </aside>
 
     <main class="principal">
@@ -70,6 +135,9 @@
         <div class="carregando">Carregando…</div>
       </section>
     </main>
+
+    <!-- So no celular: botao flutuante de novo lancamento -->
+    <button class="btn-flutuante" id="btn-novo-movel" aria-label="Novo lançamento"><svg><use href="#i-mais"/></svg></button>
   </div>
 
   <dialog id="modal" class="modal">
@@ -86,11 +154,14 @@
 
   <div class="avisos" id="avisos" aria-live="polite"></div>
 
+  <!-- config.js e gerado no deploy (URL e chave PUBLICA do Supabase). Nao fica no git. -->
+  <script src="js/config.js"></script>
+  <script src="vendor/supabase.js"></script>
   <script src="js/util.js"></script>
-  <script src="js/api.js"></script>
   <script src="js/graficos.js"></script>
   <script src="js/lancamento.js"></script>
   <script src="js/telas.js"></script>
   <script src="js/app.js"></script>
+  <script type="module" src="js/principal.js"></script>
 </body>
 </html>

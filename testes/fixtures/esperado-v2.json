@@ -1,0 +1,3189 @@
+{
+ "2026-08": {
+  "visao": {
+   "ref": "2026-08",
+   "rotulo": "Agosto 2026",
+   "mes_atual": false,
+   "conta": {
+    "entradas": 1000000,
+    "saidas_debito": 184500,
+    "pagamentos_fatura": 33334,
+    "depositos": 30000,
+    "saques": 5000,
+    "saldo": 907166,
+    "ref": "2026-08",
+    "mes_passado": true,
+    "a_entrar_mes": 0,
+    "a_sair_mes": 0,
+    "a_sair_debito": 0,
+    "a_sair_fatura": 0,
+    "previsao_fim_mes": 555500
+   },
+   "reservas": {
+    "total": 35123,
+    "total_caixinhas": 35000,
+    "total_fundos": 123
+   },
+   "patrimonio": 942289,
+   "fatura": {
+    "ref": "2026-08",
+    "rotulo": "Agosto 2026",
+    "inicio": "2026-06-30",
+    "fechamento": "2026-07-29",
+    "vencimento": "2026-08-03",
+    "total": 0,
+    "pago": 0,
+    "restante": 0,
+    "status": "vazia",
+    "por_dono": [],
+    "de_terceiros": 0,
+    "pagamentos": []
+   },
+   "faturas_pendentes": 1,
+   "gastos_por_dono": [
+    {
+     "dono": {
+      "id": 1,
+      "nome": "Eu",
+      "tipo": "EU",
+      "cor": "#9085E9",
+      "ativo": 1,
+      "criado_em": "2026-10-01",
+      "usos": 6
+     },
+     "total": 70590
+    },
+    {
+     "dono": {
+      "id": 3,
+      "nome": "Empresa X",
+      "tipo": "ORG",
+      "cor": "#D95926",
+      "ativo": 1,
+      "criado_em": "2026-09-15",
+      "usos": 1
+     },
+     "total": 13334
+    },
+    {
+     "dono": {
+      "id": 2,
+      "nome": "Fulano",
+      "tipo": "PESSOA",
+      "cor": "#199E70",
+      "ativo": 1,
+      "criado_em": "2026-09-15",
+      "usos": 2
+     },
+     "total": 45000
+    },
+    {
+     "dono": {
+      "id": 4,
+      "nome": "Arquivado",
+      "tipo": "PESSOA",
+      "cor": "#3987E5",
+      "ativo": 0,
+      "criado_em": "2026-09-15",
+      "usos": 1
+     },
+     "total": 4500
+    }
+   ],
+   "total_gasto_mes": 133424,
+   "entradas_mes": 500000,
+   "categorias_eu": [
+    {
+     "categoria_id": null,
+     "nome": "Sem categoria",
+     "cor": "#78909C",
+     "valor": 70590
+    }
+   ]
+  },
+  "mes": {
+   "ref": "2026-08",
+   "rotulo": "Agosto 2026",
+   "abas": [
+    {
+     "dono": {
+      "id": 1,
+      "nome": "Eu",
+      "tipo": "EU",
+      "cor": "#9085E9",
+      "ativo": 1,
+      "criado_em": "2026-10-01",
+      "usos": 6
+     },
+     "total": 70590,
+     "total_credito": 25590,
+     "total_debito": 45000,
+     "grupos": {
+      "FIXO": {
+       "itens": [
+        {
+         "id": 14,
+         "compra_id": 4,
+         "data": "2026-08-05",
+         "ref": "2026-08",
+         "valor": 90000,
+         "fatura_ref": null,
+         "parcela_num": null,
+         "parcela_total": null,
+         "descricao": "Aluguel",
+         "fluxo": "SAIDA",
+         "natureza": "FIXO",
+         "meio": "DEBITO",
+         "fim_ref": null,
+         "categoria_id": null,
+         "categoria": null,
+         "categoria_cor": null,
+         "partes": [
+          {
+           "dono_id": 1,
+           "valor": 45000
+          },
+          {
+           "dono_id": 2,
+           "valor": 45000
+          }
+         ],
+         "valor_dono": 45000,
+         "futuro": false
+        },
+        {
+         "id": 18,
+         "compra_id": 5,
+         "data": "2026-08-12",
+         "ref": "2026-08",
+         "valor": 5590,
+         "fatura_ref": "2026-09",
+         "parcela_num": null,
+         "parcela_total": null,
+         "descricao": "Streaming",
+         "fluxo": "SAIDA",
+         "natureza": "FIXO",
+         "meio": "CREDITO",
+         "fim_ref": "2026-12",
+         "categoria_id": null,
+         "categoria": null,
+         "categoria_cor": null,
+         "partes": [
+          {
+           "dono_id": 1,
+           "valor": 5590
+          }
+         ],
+         "valor_dono": 5590,
+         "futuro": false
+        }
+       ],
+       "total": 50590
+      },
+      "PARCELAMENTO": {
+       "itens": [
+        {
+         "id": 2,
+         "compra_id": 2,
+         "data": "2026-08-20",
+         "ref": "2026-08",
+         "valor": 33334,
+         "fatura_ref": "2026-09",
+         "parcela_num": 1,
+         "parcela_total": 3,
+         "descricao": "Celular",
+         "fluxo": "SAIDA",
+         "natureza": "PARCELAMENTO",
+         "meio": "CREDITO",
+         "fim_ref": null,
+         "categoria_id": null,
+         "categoria": null,
+         "categoria_cor": null,
+         "partes": [
+          {
+           "dono_id": 1,
+           "valor": 20000
+          },
+          {
+           "dono_id": 3,
+           "valor": 13334
+          }
+         ],
+         "valor_dono": 20000,
+         "futuro": false
+        }
+       ],
+       "total": 20000
+      },
+      "AVULSO": {
+       "itens": [],
+       "total": 0
+      }
+     },
+     "categorias": [
+      {
+       "categoria_id": null,
+       "nome": "Sem categoria",
+       "cor": "#78909C",
+       "valor": 70590
+      }
+     ],
+     "quantidade": 3
+    },
+    {
+     "dono": {
+      "id": 3,
+      "nome": "Empresa X",
+      "tipo": "ORG",
+      "cor": "#D95926",
+      "ativo": 1,
+      "criado_em": "2026-09-15",
+      "usos": 1
+     },
+     "total": 13334,
+     "total_credito": 13334,
+     "total_debito": 0,
+     "grupos": {
+      "FIXO": {
+       "itens": [],
+       "total": 0
+      },
+      "PARCELAMENTO": {
+       "itens": [
+        {
+         "id": 2,
+         "compra_id": 2,
+         "data": "2026-08-20",
+         "ref": "2026-08",
+         "valor": 33334,
+         "fatura_ref": "2026-09",
+         "parcela_num": 1,
+         "parcela_total": 3,
+         "descricao": "Celular",
+         "fluxo": "SAIDA",
+         "natureza": "PARCELAMENTO",
+         "meio": "CREDITO",
+         "fim_ref": null,
+         "categoria_id": null,
+         "categoria": null,
+         "categoria_cor": null,
+         "partes": [
+          {
+           "dono_id": 1,
+           "valor": 20000
+          },
+          {
+           "dono_id": 3,
+           "valor": 13334
+          }
+         ],
+         "valor_dono": 13334,
+         "futuro": false
+        }
+       ],
+       "total": 13334
+      },
+      "AVULSO": {
+       "itens": [],
+       "total": 0
+      }
+     },
+     "categorias": [
+      {
+       "categoria_id": null,
+       "nome": "Sem categoria",
+       "cor": "#78909C",
+       "valor": 13334
+      }
+     ],
+     "quantidade": 1
+    },
+    {
+     "dono": {
+      "id": 2,
+      "nome": "Fulano",
+      "tipo": "PESSOA",
+      "cor": "#199E70",
+      "ativo": 1,
+      "criado_em": "2026-09-15",
+      "usos": 2
+     },
+     "total": 45000,
+     "total_credito": 0,
+     "total_debito": 45000,
+     "grupos": {
+      "FIXO": {
+       "itens": [
+        {
+         "id": 14,
+         "compra_id": 4,
+         "data": "2026-08-05",
+         "ref": "2026-08",
+         "valor": 90000,
+         "fatura_ref": null,
+         "parcela_num": null,
+         "parcela_total": null,
+         "descricao": "Aluguel",
+         "fluxo": "SAIDA",
+         "natureza": "FIXO",
+         "meio": "DEBITO",
+         "fim_ref": null,
+         "categoria_id": null,
+         "categoria": null,
+         "categoria_cor": null,
+         "partes": [
+          {
+           "dono_id": 1,
+           "valor": 45000
+          },
+          {
+           "dono_id": 2,
+           "valor": 45000
+          }
+         ],
+         "valor_dono": 45000,
+         "futuro": false
+        }
+       ],
+       "total": 45000
+      },
+      "PARCELAMENTO": {
+       "itens": [],
+       "total": 0
+      },
+      "AVULSO": {
+       "itens": [],
+       "total": 0
+      }
+     },
+     "categorias": [
+      {
+       "categoria_id": null,
+       "nome": "Sem categoria",
+       "cor": "#78909C",
+       "valor": 45000
+      }
+     ],
+     "quantidade": 1
+    },
+    {
+     "dono": {
+      "id": 4,
+      "nome": "Arquivado",
+      "tipo": "PESSOA",
+      "cor": "#3987E5",
+      "ativo": 0,
+      "criado_em": "2026-09-15",
+      "usos": 1
+     },
+     "total": 4500,
+     "total_credito": 0,
+     "total_debito": 4500,
+     "grupos": {
+      "FIXO": {
+       "itens": [],
+       "total": 0
+      },
+      "PARCELAMENTO": {
+       "itens": [],
+       "total": 0
+      },
+      "AVULSO": {
+       "itens": [
+        {
+         "id": 26,
+         "compra_id": 7,
+         "data": "2026-08-15",
+         "ref": "2026-08",
+         "valor": 4500,
+         "fatura_ref": null,
+         "parcela_num": null,
+         "parcela_total": null,
+         "descricao": "Almoço antigo",
+         "fluxo": "SAIDA",
+         "natureza": "AVULSO",
+         "meio": "DEBITO",
+         "fim_ref": null,
+         "categoria_id": null,
+         "categoria": null,
+         "categoria_cor": null,
+         "partes": [
+          {
+           "dono_id": 4,
+           "valor": 4500
+          }
+         ],
+         "valor_dono": 4500,
+         "futuro": false
+        }
+       ],
+       "total": 4500
+      }
+     },
+     "categorias": [
+      {
+       "categoria_id": null,
+       "nome": "Sem categoria",
+       "cor": "#78909C",
+       "valor": 4500
+      }
+     ],
+     "quantidade": 1
+    }
+   ],
+   "total_saidas": 133424,
+   "entradas": {
+    "itens": [
+     {
+      "id": 22,
+      "compra_id": 6,
+      "data": "2026-08-05",
+      "ref": "2026-08",
+      "valor": 500000,
+      "fatura_ref": null,
+      "parcela_num": null,
+      "parcela_total": null,
+      "descricao": "Salário",
+      "fluxo": "ENTRADA",
+      "natureza": "FIXO",
+      "meio": "DEBITO",
+      "fim_ref": null,
+      "categoria_id": null,
+      "categoria": null,
+      "categoria_cor": null,
+      "partes": [
+       {
+        "dono_id": 1,
+        "valor": 500000
+       }
+      ],
+      "futuro": false
+     }
+    ],
+    "total": 500000
+   }
+  },
+  "fatura": {
+   "ref": "2026-08",
+   "rotulo": "Agosto 2026",
+   "inicio": "2026-06-30",
+   "fechamento": "2026-07-29",
+   "vencimento": "2026-08-03",
+   "total": 0,
+   "pago": 0,
+   "restante": 0,
+   "status": "vazia",
+   "itens": [],
+   "por_dono": [],
+   "de_terceiros": 0,
+   "pagamentos": []
+  },
+  "faturas": [
+   {
+    "ref": "2026-08",
+    "rotulo": "Agosto 2026",
+    "inicio": "2026-06-30",
+    "fechamento": "2026-07-29",
+    "vencimento": "2026-08-03",
+    "total": 0,
+    "pago": 0,
+    "restante": 0,
+    "status": "vazia"
+   },
+   {
+    "ref": "2026-09",
+    "rotulo": "Setembro 2026",
+    "inicio": "2026-07-30",
+    "fechamento": "2026-08-29",
+    "vencimento": "2026-09-03",
+    "total": 38924,
+    "pago": 33334,
+    "restante": 5590,
+    "status": "vencida"
+   },
+   {
+    "ref": "2026-10",
+    "rotulo": "Outubro 2026",
+    "inicio": "2026-08-30",
+    "fechamento": "2026-09-29",
+    "vencimento": "2026-10-03",
+    "total": 71968,
+    "pago": 0,
+    "restante": 71968,
+    "status": "aberta"
+   },
+   {
+    "ref": "2026-11",
+    "rotulo": "Novembro 2026",
+    "inicio": "2026-09-30",
+    "fechamento": "2026-10-29",
+    "vencimento": "2026-11-03",
+    "total": 48923,
+    "pago": 0,
+    "restante": 48923,
+    "status": "futura"
+   },
+   {
+    "ref": "2026-12",
+    "rotulo": "Dezembro 2026",
+    "inicio": "2026-10-30",
+    "fechamento": "2026-11-29",
+    "vencimento": "2026-12-03",
+    "total": 15590,
+    "pago": 0,
+    "restante": 15590,
+    "status": "futura"
+   },
+   {
+    "ref": "2027-01",
+    "rotulo": "Janeiro 2027",
+    "inicio": "2026-11-30",
+    "fechamento": "2026-12-29",
+    "vencimento": "2027-01-03",
+    "total": 10000,
+    "pago": 0,
+    "restante": 10000,
+    "status": "futura"
+   },
+   {
+    "ref": "2027-02",
+    "rotulo": "Fevereiro 2027",
+    "inicio": "2026-12-30",
+    "fechamento": "2027-01-29",
+    "vencimento": "2027-02-03",
+    "total": 10000,
+    "pago": 0,
+    "restante": 10000,
+    "status": "futura"
+   },
+   {
+    "ref": "2027-03",
+    "rotulo": "Março 2027",
+    "inicio": "2027-01-30",
+    "fechamento": "2027-02-28",
+    "vencimento": "2027-03-03",
+    "total": 10000,
+    "pago": 0,
+    "restante": 10000,
+    "status": "futura"
+   },
+   {
+    "ref": "2027-04",
+    "rotulo": "Abril 2027",
+    "inicio": "2027-03-01",
+    "fechamento": "2027-03-29",
+    "vencimento": "2027-04-03",
+    "total": 10000,
+    "pago": 0,
+    "restante": 10000,
+    "status": "futura"
+   },
+   {
+    "ref": "2027-05",
+    "rotulo": "Maio 2027",
+    "inicio": "2027-03-30",
+    "fechamento": "2027-04-29",
+    "vencimento": "2027-05-03",
+    "total": 10000,
+    "pago": 0,
+    "restante": 10000,
+    "status": "futura"
+   },
+   {
+    "ref": "2027-06",
+    "rotulo": "Junho 2027",
+    "inicio": "2027-04-30",
+    "fechamento": "2027-05-29",
+    "vencimento": "2027-06-03",
+    "total": 10000,
+    "pago": 0,
+    "restante": 10000,
+    "status": "futura"
+   }
+  ],
+  "conta": {
+   "entradas": 1000000,
+   "saidas_debito": 184500,
+   "pagamentos_fatura": 33334,
+   "depositos": 30000,
+   "saques": 5000,
+   "saldo": 907166,
+   "ref": "2026-08",
+   "mes_passado": true,
+   "a_entrar_mes": 0,
+   "a_sair_mes": 0,
+   "a_sair_debito": 0,
+   "a_sair_fatura": 0,
+   "previsao_fim_mes": 555500
+  }
+ },
+ "2026-09": {
+  "visao": {
+   "ref": "2026-09",
+   "rotulo": "Setembro 2026",
+   "mes_atual": true,
+   "conta": {
+    "entradas": 1000000,
+    "saidas_debito": 184500,
+    "pagamentos_fatura": 33334,
+    "depositos": 30000,
+    "saques": 5000,
+    "saldo": 907166,
+    "ref": "2026-09",
+    "mes_passado": false,
+    "a_entrar_mes": 0,
+    "a_sair_mes": 5590,
+    "a_sair_debito": 0,
+    "a_sair_fatura": 5590,
+    "previsao_fim_mes": 901576
+   },
+   "reservas": {
+    "total": 35123,
+    "total_caixinhas": 35000,
+    "total_fundos": 123
+   },
+   "patrimonio": 942289,
+   "fatura": {
+    "ref": "2026-09",
+    "rotulo": "Setembro 2026",
+    "inicio": "2026-07-30",
+    "fechamento": "2026-08-29",
+    "vencimento": "2026-09-03",
+    "total": 38924,
+    "pago": 33334,
+    "restante": 5590,
+    "status": "vencida",
+    "por_dono": [
+     {
+      "dono_id": 1,
+      "valor": 25590,
+      "itens": 2
+     },
+     {
+      "dono_id": 3,
+      "valor": 13334,
+      "itens": 1
+     }
+    ],
+    "de_terceiros": 13334,
+    "pagamentos": [
+     {
+      "id": 1,
+      "fatura_ref": "2026-09",
+      "data": "2026-09-03",
+      "valor": 33334,
+      "criado_em": "2026-09-15"
+     }
+    ]
+   },
+   "faturas_pendentes": 1,
+   "gastos_por_dono": [
+    {
+     "dono": {
+      "id": 1,
+      "nome": "Eu",
+      "tipo": "EU",
+      "cor": "#9085E9",
+      "ativo": 1,
+      "criado_em": "2026-10-01",
+      "usos": 6
+     },
+     "total": 92113
+    },
+    {
+     "dono": {
+      "id": 3,
+      "nome": "Empresa X",
+      "tipo": "ORG",
+      "cor": "#D95926",
+      "ativo": 1,
+      "criado_em": "2026-09-15",
+      "usos": 1
+     },
+     "total": 13333
+    },
+    {
+     "dono": {
+      "id": 2,
+      "nome": "Fulano",
+      "tipo": "PESSOA",
+      "cor": "#199E70",
+      "ativo": 1,
+      "criado_em": "2026-09-15",
+      "usos": 2
+     },
+     "total": 56522
+    }
+   ],
+   "total_gasto_mes": 161968,
+   "entradas_mes": 500000,
+   "categorias_eu": [
+    {
+     "categoria_id": null,
+     "nome": "Sem categoria",
+     "cor": "#78909C",
+     "valor": 80590
+    },
+    {
+     "categoria_id": 2,
+     "nome": "Mercado",
+     "cor": "#FFD54F",
+     "valor": 11523
+    }
+   ]
+  },
+  "mes": {
+   "ref": "2026-09",
+   "rotulo": "Setembro 2026",
+   "abas": [
+    {
+     "dono": {
+      "id": 1,
+      "nome": "Eu",
+      "tipo": "EU",
+      "cor": "#9085E9",
+      "ativo": 1,
+      "criado_em": "2026-10-01",
+      "usos": 6
+     },
+     "total": 92113,
+     "total_credito": 47113,
+     "total_debito": 45000,
+     "grupos": {
+      "FIXO": {
+       "itens": [
+        {
+         "id": 15,
+         "compra_id": 4,
+         "data": "2026-09-05",
+         "ref": "2026-09",
+         "valor": 90000,
+         "fatura_ref": null,
+         "parcela_num": null,
+         "parcela_total": null,
+         "descricao": "Aluguel",
+         "fluxo": "SAIDA",
+         "natureza": "FIXO",
+         "meio": "DEBITO",
+         "fim_ref": null,
+         "categoria_id": null,
+         "categoria": null,
+         "categoria_cor": null,
+         "partes": [
+          {
+           "dono_id": 1,
+           "valor": 45000
+          },
+          {
+           "dono_id": 2,
+           "valor": 45000
+          }
+         ],
+         "valor_dono": 45000,
+         "futuro": false
+        },
+        {
+         "id": 19,
+         "compra_id": 5,
+         "data": "2026-09-12",
+         "ref": "2026-09",
+         "valor": 5590,
+         "fatura_ref": "2026-10",
+         "parcela_num": null,
+         "parcela_total": null,
+         "descricao": "Streaming",
+         "fluxo": "SAIDA",
+         "natureza": "FIXO",
+         "meio": "CREDITO",
+         "fim_ref": "2026-12",
+         "categoria_id": null,
+         "categoria": null,
+         "categoria_cor": null,
+         "partes": [
+          {
+           "dono_id": 1,
+           "valor": 5590
+          }
+         ],
+         "valor_dono": 5590,
+         "futuro": false
+        }
+       ],
+       "total": 50590
+      },
+      "PARCELAMENTO": {
+       "itens": [
+        {
+         "id": 5,
+         "compra_id": 3,
+         "data": "2026-09-05",
+         "ref": "2026-09",
+         "valor": 10000,
+         "fatura_ref": "2026-10",
+         "parcela_num": 4,
+         "parcela_total": 12,
+         "descricao": "Notebook",
+         "fluxo": "SAIDA",
+         "natureza": "PARCELAMENTO",
+         "meio": "CREDITO",
+         "fim_ref": null,
+         "categoria_id": null,
+         "categoria": null,
+         "categoria_cor": null,
+         "partes": [
+          {
+           "dono_id": 1,
+           "valor": 10000
+          }
+         ],
+         "valor_dono": 10000,
+         "futuro": false
+        },
+        {
+         "id": 3,
+         "compra_id": 2,
+         "data": "2026-09-20",
+         "ref": "2026-09",
+         "valor": 33333,
+         "fatura_ref": "2026-10",
+         "parcela_num": 2,
+         "parcela_total": 3,
+         "descricao": "Celular",
+         "fluxo": "SAIDA",
+         "natureza": "PARCELAMENTO",
+         "meio": "CREDITO",
+         "fim_ref": null,
+         "categoria_id": null,
+         "categoria": null,
+         "categoria_cor": null,
+         "partes": [
+          {
+           "dono_id": 1,
+           "valor": 20000
+          },
+          {
+           "dono_id": 3,
+           "valor": 13333
+          }
+         ],
+         "valor_dono": 20000,
+         "futuro": true
+        }
+       ],
+       "total": 30000
+      },
+      "AVULSO": {
+       "itens": [
+        {
+         "id": 1,
+         "compra_id": 1,
+         "data": "2026-09-10",
+         "ref": "2026-09",
+         "valor": 23045,
+         "fatura_ref": "2026-10",
+         "parcela_num": null,
+         "parcela_total": null,
+         "descricao": "Mercado",
+         "fluxo": "SAIDA",
+         "natureza": "AVULSO",
+         "meio": "CREDITO",
+         "fim_ref": null,
+         "categoria_id": 2,
+         "categoria": "Mercado",
+         "categoria_cor": "#FFD54F",
+         "partes": [
+          {
+           "dono_id": 1,
+           "valor": 11523
+          },
+          {
+           "dono_id": 2,
+           "valor": 11522
+          }
+         ],
+         "valor_dono": 11523,
+         "futuro": false
+        }
+       ],
+       "total": 11523
+      }
+     },
+     "categorias": [
+      {
+       "categoria_id": null,
+       "nome": "Sem categoria",
+       "cor": "#78909C",
+       "valor": 80590
+      },
+      {
+       "categoria_id": 2,
+       "nome": "Mercado",
+       "cor": "#FFD54F",
+       "valor": 11523
+      }
+     ],
+     "quantidade": 5
+    },
+    {
+     "dono": {
+      "id": 3,
+      "nome": "Empresa X",
+      "tipo": "ORG",
+      "cor": "#D95926",
+      "ativo": 1,
+      "criado_em": "2026-09-15",
+      "usos": 1
+     },
+     "total": 13333,
+     "total_credito": 13333,
+     "total_debito": 0,
+     "grupos": {
+      "FIXO": {
+       "itens": [],
+       "total": 0
+      },
+      "PARCELAMENTO": {
+       "itens": [
+        {
+         "id": 3,
+         "compra_id": 2,
+         "data": "2026-09-20",
+         "ref": "2026-09",
+         "valor": 33333,
+         "fatura_ref": "2026-10",
+         "parcela_num": 2,
+         "parcela_total": 3,
+         "descricao": "Celular",
+         "fluxo": "SAIDA",
+         "natureza": "PARCELAMENTO",
+         "meio": "CREDITO",
+         "fim_ref": null,
+         "categoria_id": null,
+         "categoria": null,
+         "categoria_cor": null,
+         "partes": [
+          {
+           "dono_id": 1,
+           "valor": 20000
+          },
+          {
+           "dono_id": 3,
+           "valor": 13333
+          }
+         ],
+         "valor_dono": 13333,
+         "futuro": true
+        }
+       ],
+       "total": 13333
+      },
+      "AVULSO": {
+       "itens": [],
+       "total": 0
+      }
+     },
+     "categorias": [
+      {
+       "categoria_id": null,
+       "nome": "Sem categoria",
+       "cor": "#78909C",
+       "valor": 13333
+      }
+     ],
+     "quantidade": 1
+    },
+    {
+     "dono": {
+      "id": 2,
+      "nome": "Fulano",
+      "tipo": "PESSOA",
+      "cor": "#199E70",
+      "ativo": 1,
+      "criado_em": "2026-09-15",
+      "usos": 2
+     },
+     "total": 56522,
+     "total_credito": 11522,
+     "total_debito": 45000,
+     "grupos": {
+      "FIXO": {
+       "itens": [
+        {
+         "id": 15,
+         "compra_id": 4,
+         "data": "2026-09-05",
+         "ref": "2026-09",
+         "valor": 90000,
+         "fatura_ref": null,
+         "parcela_num": null,
+         "parcela_total": null,
+         "descricao": "Aluguel",
+         "fluxo": "SAIDA",
+         "natureza": "FIXO",
+         "meio": "DEBITO",
+         "fim_ref": null,
+         "categoria_id": null,
+         "categoria": null,
+         "categoria_cor": null,
+         "partes": [
+          {
+           "dono_id": 1,
+           "valor": 45000
+          },
+          {
+           "dono_id": 2,
+           "valor": 45000
+          }
+         ],
+         "valor_dono": 45000,
+         "futuro": false
+        }
+       ],
+       "total": 45000
+      },
+      "PARCELAMENTO": {
+       "itens": [],
+       "total": 0
+      },
+      "AVULSO": {
+       "itens": [
+        {
+         "id": 1,
+         "compra_id": 1,
+         "data": "2026-09-10",
+         "ref": "2026-09",
+         "valor": 23045,
+         "fatura_ref": "2026-10",
+         "parcela_num": null,
+         "parcela_total": null,
+         "descricao": "Mercado",
+         "fluxo": "SAIDA",
+         "natureza": "AVULSO",
+         "meio": "CREDITO",
+         "fim_ref": null,
+         "categoria_id": 2,
+         "categoria": "Mercado",
+         "categoria_cor": "#FFD54F",
+         "partes": [
+          {
+           "dono_id": 1,
+           "valor": 11523
+          },
+          {
+           "dono_id": 2,
+           "valor": 11522
+          }
+         ],
+         "valor_dono": 11522,
+         "futuro": false
+        }
+       ],
+       "total": 11522
+      }
+     },
+     "categorias": [
+      {
+       "categoria_id": null,
+       "nome": "Sem categoria",
+       "cor": "#78909C",
+       "valor": 45000
+      },
+      {
+       "categoria_id": 2,
+       "nome": "Mercado",
+       "cor": "#FFD54F",
+       "valor": 11522
+      }
+     ],
+     "quantidade": 2
+    }
+   ],
+   "total_saidas": 161968,
+   "entradas": {
+    "itens": [
+     {
+      "id": 23,
+      "compra_id": 6,
+      "data": "2026-09-05",
+      "ref": "2026-09",
+      "valor": 500000,
+      "fatura_ref": null,
+      "parcela_num": null,
+      "parcela_total": null,
+      "descricao": "Salário",
+      "fluxo": "ENTRADA",
+      "natureza": "FIXO",
+      "meio": "DEBITO",
+      "fim_ref": null,
+      "categoria_id": null,
+      "categoria": null,
+      "categoria_cor": null,
+      "partes": [
+       {
+        "dono_id": 1,
+        "valor": 500000
+       }
+      ],
+      "futuro": false
+     }
+    ],
+    "total": 500000
+   }
+  },
+  "fatura": {
+   "ref": "2026-09",
+   "rotulo": "Setembro 2026",
+   "inicio": "2026-07-30",
+   "fechamento": "2026-08-29",
+   "vencimento": "2026-09-03",
+   "total": 38924,
+   "pago": 33334,
+   "restante": 5590,
+   "status": "vencida",
+   "itens": [
+    {
+     "id": 18,
+     "compra_id": 5,
+     "data": "2026-08-12",
+     "ref": "2026-08",
+     "valor": 5590,
+     "fatura_ref": "2026-09",
+     "parcela_num": null,
+     "parcela_total": null,
+     "descricao": "Streaming",
+     "fluxo": "SAIDA",
+     "natureza": "FIXO",
+     "meio": "CREDITO",
+     "fim_ref": "2026-12",
+     "categoria_id": null,
+     "categoria": null,
+     "categoria_cor": null,
+     "partes": [
+      {
+       "dono_id": 1,
+       "valor": 5590
+      }
+     ]
+    },
+    {
+     "id": 2,
+     "compra_id": 2,
+     "data": "2026-08-20",
+     "ref": "2026-08",
+     "valor": 33334,
+     "fatura_ref": "2026-09",
+     "parcela_num": 1,
+     "parcela_total": 3,
+     "descricao": "Celular",
+     "fluxo": "SAIDA",
+     "natureza": "PARCELAMENTO",
+     "meio": "CREDITO",
+     "fim_ref": null,
+     "categoria_id": null,
+     "categoria": null,
+     "categoria_cor": null,
+     "partes": [
+      {
+       "dono_id": 1,
+       "valor": 20000
+      },
+      {
+       "dono_id": 3,
+       "valor": 13334
+      }
+     ]
+    }
+   ],
+   "por_dono": [
+    {
+     "dono_id": 1,
+     "valor": 25590,
+     "itens": 2
+    },
+    {
+     "dono_id": 3,
+     "valor": 13334,
+     "itens": 1
+    }
+   ],
+   "de_terceiros": 13334,
+   "pagamentos": [
+    {
+     "id": 1,
+     "fatura_ref": "2026-09",
+     "data": "2026-09-03",
+     "valor": 33334,
+     "criado_em": "2026-09-15"
+    }
+   ]
+  },
+  "faturas": [
+   {
+    "ref": "2026-09",
+    "rotulo": "Setembro 2026",
+    "inicio": "2026-07-30",
+    "fechamento": "2026-08-29",
+    "vencimento": "2026-09-03",
+    "total": 38924,
+    "pago": 33334,
+    "restante": 5590,
+    "status": "vencida"
+   },
+   {
+    "ref": "2026-10",
+    "rotulo": "Outubro 2026",
+    "inicio": "2026-08-30",
+    "fechamento": "2026-09-29",
+    "vencimento": "2026-10-03",
+    "total": 71968,
+    "pago": 0,
+    "restante": 71968,
+    "status": "aberta"
+   },
+   {
+    "ref": "2026-11",
+    "rotulo": "Novembro 2026",
+    "inicio": "2026-09-30",
+    "fechamento": "2026-10-29",
+    "vencimento": "2026-11-03",
+    "total": 48923,
+    "pago": 0,
+    "restante": 48923,
+    "status": "futura"
+   },
+   {
+    "ref": "2026-12",
+    "rotulo": "Dezembro 2026",
+    "inicio": "2026-10-30",
+    "fechamento": "2026-11-29",
+    "vencimento": "2026-12-03",
+    "total": 15590,
+    "pago": 0,
+    "restante": 15590,
+    "status": "futura"
+   },
+   {
+    "ref": "2027-01",
+    "rotulo": "Janeiro 2027",
+    "inicio": "2026-11-30",
+    "fechamento": "2026-12-29",
+    "vencimento": "2027-01-03",
+    "total": 10000,
+    "pago": 0,
+    "restante": 10000,
+    "status": "futura"
+   },
+   {
+    "ref": "2027-02",
+    "rotulo": "Fevereiro 2027",
+    "inicio": "2026-12-30",
+    "fechamento": "2027-01-29",
+    "vencimento": "2027-02-03",
+    "total": 10000,
+    "pago": 0,
+    "restante": 10000,
+    "status": "futura"
+   },
+   {
+    "ref": "2027-03",
+    "rotulo": "Março 2027",
+    "inicio": "2027-01-30",
+    "fechamento": "2027-02-28",
+    "vencimento": "2027-03-03",
+    "total": 10000,
+    "pago": 0,
+    "restante": 10000,
+    "status": "futura"
+   },
+   {
+    "ref": "2027-04",
+    "rotulo": "Abril 2027",
+    "inicio": "2027-03-01",
+    "fechamento": "2027-03-29",
+    "vencimento": "2027-04-03",
+    "total": 10000,
+    "pago": 0,
+    "restante": 10000,
+    "status": "futura"
+   },
+   {
+    "ref": "2027-05",
+    "rotulo": "Maio 2027",
+    "inicio": "2027-03-30",
+    "fechamento": "2027-04-29",
+    "vencimento": "2027-05-03",
+    "total": 10000,
+    "pago": 0,
+    "restante": 10000,
+    "status": "futura"
+   },
+   {
+    "ref": "2027-06",
+    "rotulo": "Junho 2027",
+    "inicio": "2027-04-30",
+    "fechamento": "2027-05-29",
+    "vencimento": "2027-06-03",
+    "total": 10000,
+    "pago": 0,
+    "restante": 10000,
+    "status": "futura"
+   }
+  ],
+  "conta": {
+   "entradas": 1000000,
+   "saidas_debito": 184500,
+   "pagamentos_fatura": 33334,
+   "depositos": 30000,
+   "saques": 5000,
+   "saldo": 907166,
+   "ref": "2026-09",
+   "mes_passado": false,
+   "a_entrar_mes": 0,
+   "a_sair_mes": 5590,
+   "a_sair_debito": 0,
+   "a_sair_fatura": 5590,
+   "previsao_fim_mes": 901576
+  }
+ },
+ "2026-10": {
+  "visao": {
+   "ref": "2026-10",
+   "rotulo": "Outubro 2026",
+   "mes_atual": false,
+   "conta": {
+    "entradas": 1000000,
+    "saidas_debito": 184500,
+    "pagamentos_fatura": 33334,
+    "depositos": 30000,
+    "saques": 5000,
+    "saldo": 907166,
+    "ref": "2026-10",
+    "mes_passado": false,
+    "a_entrar_mes": 500000,
+    "a_sair_mes": 71968,
+    "a_sair_debito": 0,
+    "a_sair_fatura": 71968,
+    "previsao_fim_mes": 1329608
+   },
+   "reservas": {
+    "total": 35123,
+    "total_caixinhas": 35000,
+    "total_fundos": 123
+   },
+   "patrimonio": 942289,
+   "fatura": {
+    "ref": "2026-10",
+    "rotulo": "Outubro 2026",
+    "inicio": "2026-08-30",
+    "fechamento": "2026-09-29",
+    "vencimento": "2026-10-03",
+    "total": 71968,
+    "pago": 0,
+    "restante": 71968,
+    "status": "aberta",
+    "por_dono": [
+     {
+      "dono_id": 1,
+      "valor": 47113,
+      "itens": 4
+     },
+     {
+      "dono_id": 3,
+      "valor": 13333,
+      "itens": 1
+     },
+     {
+      "dono_id": 2,
+      "valor": 11522,
+      "itens": 1
+     }
+    ],
+    "de_terceiros": 24855,
+    "pagamentos": []
+   },
+   "faturas_pendentes": 1,
+   "gastos_por_dono": [
+    {
+     "dono": {
+      "id": 1,
+      "nome": "Eu",
+      "tipo": "EU",
+      "cor": "#9085E9",
+      "ativo": 1,
+      "criado_em": "2026-10-01",
+      "usos": 6
+     },
+     "total": 35590
+    },
+    {
+     "dono": {
+      "id": 3,
+      "nome": "Empresa X",
+      "tipo": "ORG",
+      "cor": "#D95926",
+      "ativo": 1,
+      "criado_em": "2026-09-15",
+      "usos": 1
+     },
+     "total": 13333
+    }
+   ],
+   "total_gasto_mes": 48923,
+   "entradas_mes": 500000,
+   "categorias_eu": [
+    {
+     "categoria_id": null,
+     "nome": "Sem categoria",
+     "cor": "#78909C",
+     "valor": 35590
+    }
+   ]
+  },
+  "mes": {
+   "ref": "2026-10",
+   "rotulo": "Outubro 2026",
+   "abas": [
+    {
+     "dono": {
+      "id": 1,
+      "nome": "Eu",
+      "tipo": "EU",
+      "cor": "#9085E9",
+      "ativo": 1,
+      "criado_em": "2026-10-01",
+      "usos": 6
+     },
+     "total": 35590,
+     "total_credito": 35590,
+     "total_debito": 0,
+     "grupos": {
+      "FIXO": {
+       "itens": [
+        {
+         "id": 20,
+         "compra_id": 5,
+         "data": "2026-10-12",
+         "ref": "2026-10",
+         "valor": 5590,
+         "fatura_ref": "2026-11",
+         "parcela_num": null,
+         "parcela_total": null,
+         "descricao": "Streaming",
+         "fluxo": "SAIDA",
+         "natureza": "FIXO",
+         "meio": "CREDITO",
+         "fim_ref": "2026-12",
+         "categoria_id": null,
+         "categoria": null,
+         "categoria_cor": null,
+         "partes": [
+          {
+           "dono_id": 1,
+           "valor": 5590
+          }
+         ],
+         "valor_dono": 5590,
+         "futuro": true
+        }
+       ],
+       "total": 5590
+      },
+      "PARCELAMENTO": {
+       "itens": [
+        {
+         "id": 6,
+         "compra_id": 3,
+         "data": "2026-10-05",
+         "ref": "2026-10",
+         "valor": 10000,
+         "fatura_ref": "2026-11",
+         "parcela_num": 5,
+         "parcela_total": 12,
+         "descricao": "Notebook",
+         "fluxo": "SAIDA",
+         "natureza": "PARCELAMENTO",
+         "meio": "CREDITO",
+         "fim_ref": null,
+         "categoria_id": null,
+         "categoria": null,
+         "categoria_cor": null,
+         "partes": [
+          {
+           "dono_id": 1,
+           "valor": 10000
+          }
+         ],
+         "valor_dono": 10000,
+         "futuro": true
+        },
+        {
+         "id": 4,
+         "compra_id": 2,
+         "data": "2026-10-20",
+         "ref": "2026-10",
+         "valor": 33333,
+         "fatura_ref": "2026-11",
+         "parcela_num": 3,
+         "parcela_total": 3,
+         "descricao": "Celular",
+         "fluxo": "SAIDA",
+         "natureza": "PARCELAMENTO",
+         "meio": "CREDITO",
+         "fim_ref": null,
+         "categoria_id": null,
+         "categoria": null,
+         "categoria_cor": null,
+         "partes": [
+          {
+           "dono_id": 1,
+           "valor": 20000
+          },
+          {
+           "dono_id": 3,
+           "valor": 13333
+          }
+         ],
+         "valor_dono": 20000,
+         "futuro": true
+        }
+       ],
+       "total": 30000
+      },
+      "AVULSO": {
+       "itens": [],
+       "total": 0
+      }
+     },
+     "categorias": [
+      {
+       "categoria_id": null,
+       "nome": "Sem categoria",
+       "cor": "#78909C",
+       "valor": 35590
+      }
+     ],
+     "quantidade": 3
+    },
+    {
+     "dono": {
+      "id": 3,
+      "nome": "Empresa X",
+      "tipo": "ORG",
+      "cor": "#D95926",
+      "ativo": 1,
+      "criado_em": "2026-09-15",
+      "usos": 1
+     },
+     "total": 13333,
+     "total_credito": 13333,
+     "total_debito": 0,
+     "grupos": {
+      "FIXO": {
+       "itens": [],
+       "total": 0
+      },
+      "PARCELAMENTO": {
+       "itens": [
+        {
+         "id": 4,
+         "compra_id": 2,
+         "data": "2026-10-20",
+         "ref": "2026-10",
+         "valor": 33333,
+         "fatura_ref": "2026-11",
+         "parcela_num": 3,
+         "parcela_total": 3,
+         "descricao": "Celular",
+         "fluxo": "SAIDA",
+         "natureza": "PARCELAMENTO",
+         "meio": "CREDITO",
+         "fim_ref": null,
+         "categoria_id": null,
+         "categoria": null,
+         "categoria_cor": null,
+         "partes": [
+          {
+           "dono_id": 1,
+           "valor": 20000
+          },
+          {
+           "dono_id": 3,
+           "valor": 13333
+          }
+         ],
+         "valor_dono": 13333,
+         "futuro": true
+        }
+       ],
+       "total": 13333
+      },
+      "AVULSO": {
+       "itens": [],
+       "total": 0
+      }
+     },
+     "categorias": [
+      {
+       "categoria_id": null,
+       "nome": "Sem categoria",
+       "cor": "#78909C",
+       "valor": 13333
+      }
+     ],
+     "quantidade": 1
+    },
+    {
+     "dono": {
+      "id": 2,
+      "nome": "Fulano",
+      "tipo": "PESSOA",
+      "cor": "#199E70",
+      "ativo": 1,
+      "criado_em": "2026-09-15",
+      "usos": 2
+     },
+     "total": 0,
+     "total_credito": 0,
+     "total_debito": 0,
+     "grupos": {
+      "FIXO": {
+       "itens": [],
+       "total": 0
+      },
+      "PARCELAMENTO": {
+       "itens": [],
+       "total": 0
+      },
+      "AVULSO": {
+       "itens": [],
+       "total": 0
+      }
+     },
+     "categorias": [],
+     "quantidade": 0
+    }
+   ],
+   "total_saidas": 48923,
+   "entradas": {
+    "itens": [
+     {
+      "id": 24,
+      "compra_id": 6,
+      "data": "2026-10-05",
+      "ref": "2026-10",
+      "valor": 500000,
+      "fatura_ref": null,
+      "parcela_num": null,
+      "parcela_total": null,
+      "descricao": "Salário",
+      "fluxo": "ENTRADA",
+      "natureza": "FIXO",
+      "meio": "DEBITO",
+      "fim_ref": null,
+      "categoria_id": null,
+      "categoria": null,
+      "categoria_cor": null,
+      "partes": [
+       {
+        "dono_id": 1,
+        "valor": 500000
+       }
+      ],
+      "futuro": true
+     }
+    ],
+    "total": 500000
+   }
+  },
+  "fatura": {
+   "ref": "2026-10",
+   "rotulo": "Outubro 2026",
+   "inicio": "2026-08-30",
+   "fechamento": "2026-09-29",
+   "vencimento": "2026-10-03",
+   "total": 71968,
+   "pago": 0,
+   "restante": 71968,
+   "status": "aberta",
+   "itens": [
+    {
+     "id": 5,
+     "compra_id": 3,
+     "data": "2026-09-05",
+     "ref": "2026-09",
+     "valor": 10000,
+     "fatura_ref": "2026-10",
+     "parcela_num": 4,
+     "parcela_total": 12,
+     "descricao": "Notebook",
+     "fluxo": "SAIDA",
+     "natureza": "PARCELAMENTO",
+     "meio": "CREDITO",
+     "fim_ref": null,
+     "categoria_id": null,
+     "categoria": null,
+     "categoria_cor": null,
+     "partes": [
+      {
+       "dono_id": 1,
+       "valor": 10000
+      }
+     ]
+    },
+    {
+     "id": 1,
+     "compra_id": 1,
+     "data": "2026-09-10",
+     "ref": "2026-09",
+     "valor": 23045,
+     "fatura_ref": "2026-10",
+     "parcela_num": null,
+     "parcela_total": null,
+     "descricao": "Mercado",
+     "fluxo": "SAIDA",
+     "natureza": "AVULSO",
+     "meio": "CREDITO",
+     "fim_ref": null,
+     "categoria_id": 2,
+     "categoria": "Mercado",
+     "categoria_cor": "#FFD54F",
+     "partes": [
+      {
+       "dono_id": 1,
+       "valor": 11523
+      },
+      {
+       "dono_id": 2,
+       "valor": 11522
+      }
+     ]
+    },
+    {
+     "id": 19,
+     "compra_id": 5,
+     "data": "2026-09-12",
+     "ref": "2026-09",
+     "valor": 5590,
+     "fatura_ref": "2026-10",
+     "parcela_num": null,
+     "parcela_total": null,
+     "descricao": "Streaming",
+     "fluxo": "SAIDA",
+     "natureza": "FIXO",
+     "meio": "CREDITO",
+     "fim_ref": "2026-12",
+     "categoria_id": null,
+     "categoria": null,
+     "categoria_cor": null,
+     "partes": [
+      {
+       "dono_id": 1,
+       "valor": 5590
+      }
+     ]
+    },
+    {
+     "id": 3,
+     "compra_id": 2,
+     "data": "2026-09-20",
+     "ref": "2026-09",
+     "valor": 33333,
+     "fatura_ref": "2026-10",
+     "parcela_num": 2,
+     "parcela_total": 3,
+     "descricao": "Celular",
+     "fluxo": "SAIDA",
+     "natureza": "PARCELAMENTO",
+     "meio": "CREDITO",
+     "fim_ref": null,
+     "categoria_id": null,
+     "categoria": null,
+     "categoria_cor": null,
+     "partes": [
+      {
+       "dono_id": 1,
+       "valor": 20000
+      },
+      {
+       "dono_id": 3,
+       "valor": 13333
+      }
+     ]
+    }
+   ],
+   "por_dono": [
+    {
+     "dono_id": 1,
+     "valor": 47113,
+     "itens": 4
+    },
+    {
+     "dono_id": 3,
+     "valor": 13333,
+     "itens": 1
+    },
+    {
+     "dono_id": 2,
+     "valor": 11522,
+     "itens": 1
+    }
+   ],
+   "de_terceiros": 24855,
+   "pagamentos": []
+  },
+  "faturas": [
+   {
+    "ref": "2026-09",
+    "rotulo": "Setembro 2026",
+    "inicio": "2026-07-30",
+    "fechamento": "2026-08-29",
+    "vencimento": "2026-09-03",
+    "total": 38924,
+    "pago": 33334,
+    "restante": 5590,
+    "status": "vencida"
+   },
+   {
+    "ref": "2026-10",
+    "rotulo": "Outubro 2026",
+    "inicio": "2026-08-30",
+    "fechamento": "2026-09-29",
+    "vencimento": "2026-10-03",
+    "total": 71968,
+    "pago": 0,
+    "restante": 71968,
+    "status": "aberta"
+   },
+   {
+    "ref": "2026-11",
+    "rotulo": "Novembro 2026",
+    "inicio": "2026-09-30",
+    "fechamento": "2026-10-29",
+    "vencimento": "2026-11-03",
+    "total": 48923,
+    "pago": 0,
+    "restante": 48923,
+    "status": "futura"
+   },
+   {
+    "ref": "2026-12",
+    "rotulo": "Dezembro 2026",
+    "inicio": "2026-10-30",
+    "fechamento": "2026-11-29",
+    "vencimento": "2026-12-03",
+    "total": 15590,
+    "pago": 0,
+    "restante": 15590,
+    "status": "futura"
+   },
+   {
+    "ref": "2027-01",
+    "rotulo": "Janeiro 2027",
+    "inicio": "2026-11-30",
+    "fechamento": "2026-12-29",
+    "vencimento": "2027-01-03",
+    "total": 10000,
+    "pago": 0,
+    "restante": 10000,
+    "status": "futura"
+   },
+   {
+    "ref": "2027-02",
+    "rotulo": "Fevereiro 2027",
+    "inicio": "2026-12-30",
+    "fechamento": "2027-01-29",
+    "vencimento": "2027-02-03",
+    "total": 10000,
+    "pago": 0,
+    "restante": 10000,
+    "status": "futura"
+   },
+   {
+    "ref": "2027-03",
+    "rotulo": "Março 2027",
+    "inicio": "2027-01-30",
+    "fechamento": "2027-02-28",
+    "vencimento": "2027-03-03",
+    "total": 10000,
+    "pago": 0,
+    "restante": 10000,
+    "status": "futura"
+   },
+   {
+    "ref": "2027-04",
+    "rotulo": "Abril 2027",
+    "inicio": "2027-03-01",
+    "fechamento": "2027-03-29",
+    "vencimento": "2027-04-03",
+    "total": 10000,
+    "pago": 0,
+    "restante": 10000,
+    "status": "futura"
+   },
+   {
+    "ref": "2027-05",
+    "rotulo": "Maio 2027",
+    "inicio": "2027-03-30",
+    "fechamento": "2027-04-29",
+    "vencimento": "2027-05-03",
+    "total": 10000,
+    "pago": 0,
+    "restante": 10000,
+    "status": "futura"
+   },
+   {
+    "ref": "2027-06",
+    "rotulo": "Junho 2027",
+    "inicio": "2027-04-30",
+    "fechamento": "2027-05-29",
+    "vencimento": "2027-06-03",
+    "total": 10000,
+    "pago": 0,
+    "restante": 10000,
+    "status": "futura"
+   }
+  ],
+  "conta": {
+   "entradas": 1000000,
+   "saidas_debito": 184500,
+   "pagamentos_fatura": 33334,
+   "depositos": 30000,
+   "saques": 5000,
+   "saldo": 907166,
+   "ref": "2026-10",
+   "mes_passado": false,
+   "a_entrar_mes": 500000,
+   "a_sair_mes": 71968,
+   "a_sair_debito": 0,
+   "a_sair_fatura": 71968,
+   "previsao_fim_mes": 1329608
+  }
+ },
+ "2026-12": {
+  "visao": {
+   "ref": "2026-12",
+   "rotulo": "Dezembro 2026",
+   "mes_atual": false,
+   "conta": {
+    "entradas": 1000000,
+    "saidas_debito": 184500,
+    "pagamentos_fatura": 33334,
+    "depositos": 30000,
+    "saques": 5000,
+    "saldo": 907166,
+    "ref": "2026-12",
+    "mes_passado": false,
+    "a_entrar_mes": 500000,
+    "a_sair_mes": 105590,
+    "a_sair_debito": 90000,
+    "a_sair_fatura": 15590,
+    "previsao_fim_mes": 2085095
+   },
+   "reservas": {
+    "total": 35123,
+    "total_caixinhas": 35000,
+    "total_fundos": 123
+   },
+   "patrimonio": 942289,
+   "fatura": {
+    "ref": "2026-12",
+    "rotulo": "Dezembro 2026",
+    "inicio": "2026-10-30",
+    "fechamento": "2026-11-29",
+    "vencimento": "2026-12-03",
+    "total": 15590,
+    "pago": 0,
+    "restante": 15590,
+    "status": "futura",
+    "por_dono": [
+     {
+      "dono_id": 1,
+      "valor": 15590,
+      "itens": 2
+     }
+    ],
+    "de_terceiros": 0,
+    "pagamentos": []
+   },
+   "faturas_pendentes": 1,
+   "gastos_por_dono": [
+    {
+     "dono": {
+      "id": 1,
+      "nome": "Eu",
+      "tipo": "EU",
+      "cor": "#9085E9",
+      "ativo": 1,
+      "criado_em": "2026-10-01",
+      "usos": 6
+     },
+     "total": 60590
+    },
+    {
+     "dono": {
+      "id": 2,
+      "nome": "Fulano",
+      "tipo": "PESSOA",
+      "cor": "#199E70",
+      "ativo": 1,
+      "criado_em": "2026-09-15",
+      "usos": 2
+     },
+     "total": 45000
+    }
+   ],
+   "total_gasto_mes": 105590,
+   "entradas_mes": 500000,
+   "categorias_eu": [
+    {
+     "categoria_id": null,
+     "nome": "Sem categoria",
+     "cor": "#78909C",
+     "valor": 60590
+    }
+   ]
+  },
+  "mes": {
+   "ref": "2026-12",
+   "rotulo": "Dezembro 2026",
+   "abas": [
+    {
+     "dono": {
+      "id": 1,
+      "nome": "Eu",
+      "tipo": "EU",
+      "cor": "#9085E9",
+      "ativo": 1,
+      "criado_em": "2026-10-01",
+      "usos": 6
+     },
+     "total": 60590,
+     "total_credito": 15590,
+     "total_debito": 45000,
+     "grupos": {
+      "FIXO": {
+       "itens": [
+        {
+         "id": 27,
+         "compra_id": 4,
+         "data": "2026-12-05",
+         "ref": "2026-12",
+         "valor": 90000,
+         "fatura_ref": null,
+         "parcela_num": null,
+         "parcela_total": null,
+         "descricao": "Aluguel",
+         "fluxo": "SAIDA",
+         "natureza": "FIXO",
+         "meio": "DEBITO",
+         "fim_ref": null,
+         "categoria_id": null,
+         "categoria": null,
+         "categoria_cor": null,
+         "partes": [
+          {
+           "dono_id": 1,
+           "valor": 45000
+          },
+          {
+           "dono_id": 2,
+           "valor": 45000
+          }
+         ],
+         "valor_dono": 45000,
+         "futuro": true
+        },
+        {
+         "id": 28,
+         "compra_id": 5,
+         "data": "2026-12-12",
+         "ref": "2026-12",
+         "valor": 5590,
+         "fatura_ref": "2027-01",
+         "parcela_num": null,
+         "parcela_total": null,
+         "descricao": "Streaming",
+         "fluxo": "SAIDA",
+         "natureza": "FIXO",
+         "meio": "CREDITO",
+         "fim_ref": "2026-12",
+         "categoria_id": null,
+         "categoria": null,
+         "categoria_cor": null,
+         "partes": [
+          {
+           "dono_id": 1,
+           "valor": 5590
+          }
+         ],
+         "valor_dono": 5590,
+         "futuro": true
+        }
+       ],
+       "total": 50590
+      },
+      "PARCELAMENTO": {
+       "itens": [
+        {
+         "id": 8,
+         "compra_id": 3,
+         "data": "2026-12-05",
+         "ref": "2026-12",
+         "valor": 10000,
+         "fatura_ref": "2027-01",
+         "parcela_num": 7,
+         "parcela_total": 12,
+         "descricao": "Notebook",
+         "fluxo": "SAIDA",
+         "natureza": "PARCELAMENTO",
+         "meio": "CREDITO",
+         "fim_ref": null,
+         "categoria_id": null,
+         "categoria": null,
+         "categoria_cor": null,
+         "partes": [
+          {
+           "dono_id": 1,
+           "valor": 10000
+          }
+         ],
+         "valor_dono": 10000,
+         "futuro": true
+        }
+       ],
+       "total": 10000
+      },
+      "AVULSO": {
+       "itens": [],
+       "total": 0
+      }
+     },
+     "categorias": [
+      {
+       "categoria_id": null,
+       "nome": "Sem categoria",
+       "cor": "#78909C",
+       "valor": 60590
+      }
+     ],
+     "quantidade": 3
+    },
+    {
+     "dono": {
+      "id": 3,
+      "nome": "Empresa X",
+      "tipo": "ORG",
+      "cor": "#D95926",
+      "ativo": 1,
+      "criado_em": "2026-09-15",
+      "usos": 1
+     },
+     "total": 0,
+     "total_credito": 0,
+     "total_debito": 0,
+     "grupos": {
+      "FIXO": {
+       "itens": [],
+       "total": 0
+      },
+      "PARCELAMENTO": {
+       "itens": [],
+       "total": 0
+      },
+      "AVULSO": {
+       "itens": [],
+       "total": 0
+      }
+     },
+     "categorias": [],
+     "quantidade": 0
+    },
+    {
+     "dono": {
+      "id": 2,
+      "nome": "Fulano",
+      "tipo": "PESSOA",
+      "cor": "#199E70",
+      "ativo": 1,
+      "criado_em": "2026-09-15",
+      "usos": 2
+     },
+     "total": 45000,
+     "total_credito": 0,
+     "total_debito": 45000,
+     "grupos": {
+      "FIXO": {
+       "itens": [
+        {
+         "id": 27,
+         "compra_id": 4,
+         "data": "2026-12-05",
+         "ref": "2026-12",
+         "valor": 90000,
+         "fatura_ref": null,
+         "parcela_num": null,
+         "parcela_total": null,
+         "descricao": "Aluguel",
+         "fluxo": "SAIDA",
+         "natureza": "FIXO",
+         "meio": "DEBITO",
+         "fim_ref": null,
+         "categoria_id": null,
+         "categoria": null,
+         "categoria_cor": null,
+         "partes": [
+          {
+           "dono_id": 1,
+           "valor": 45000
+          },
+          {
+           "dono_id": 2,
+           "valor": 45000
+          }
+         ],
+         "valor_dono": 45000,
+         "futuro": true
+        }
+       ],
+       "total": 45000
+      },
+      "PARCELAMENTO": {
+       "itens": [],
+       "total": 0
+      },
+      "AVULSO": {
+       "itens": [],
+       "total": 0
+      }
+     },
+     "categorias": [
+      {
+       "categoria_id": null,
+       "nome": "Sem categoria",
+       "cor": "#78909C",
+       "valor": 45000
+      }
+     ],
+     "quantidade": 1
+    }
+   ],
+   "total_saidas": 105590,
+   "entradas": {
+    "itens": [
+     {
+      "id": 29,
+      "compra_id": 6,
+      "data": "2026-12-05",
+      "ref": "2026-12",
+      "valor": 500000,
+      "fatura_ref": null,
+      "parcela_num": null,
+      "parcela_total": null,
+      "descricao": "Salário",
+      "fluxo": "ENTRADA",
+      "natureza": "FIXO",
+      "meio": "DEBITO",
+      "fim_ref": null,
+      "categoria_id": null,
+      "categoria": null,
+      "categoria_cor": null,
+      "partes": [
+       {
+        "dono_id": 1,
+        "valor": 500000
+       }
+      ],
+      "futuro": true
+     }
+    ],
+    "total": 500000
+   }
+  },
+  "fatura": {
+   "ref": "2026-12",
+   "rotulo": "Dezembro 2026",
+   "inicio": "2026-10-30",
+   "fechamento": "2026-11-29",
+   "vencimento": "2026-12-03",
+   "total": 15590,
+   "pago": 0,
+   "restante": 15590,
+   "status": "futura",
+   "itens": [
+    {
+     "id": 7,
+     "compra_id": 3,
+     "data": "2026-11-05",
+     "ref": "2026-11",
+     "valor": 10000,
+     "fatura_ref": "2026-12",
+     "parcela_num": 6,
+     "parcela_total": 12,
+     "descricao": "Notebook",
+     "fluxo": "SAIDA",
+     "natureza": "PARCELAMENTO",
+     "meio": "CREDITO",
+     "fim_ref": null,
+     "categoria_id": null,
+     "categoria": null,
+     "categoria_cor": null,
+     "partes": [
+      {
+       "dono_id": 1,
+       "valor": 10000
+      }
+     ]
+    },
+    {
+     "id": 21,
+     "compra_id": 5,
+     "data": "2026-11-12",
+     "ref": "2026-11",
+     "valor": 5590,
+     "fatura_ref": "2026-12",
+     "parcela_num": null,
+     "parcela_total": null,
+     "descricao": "Streaming",
+     "fluxo": "SAIDA",
+     "natureza": "FIXO",
+     "meio": "CREDITO",
+     "fim_ref": "2026-12",
+     "categoria_id": null,
+     "categoria": null,
+     "categoria_cor": null,
+     "partes": [
+      {
+       "dono_id": 1,
+       "valor": 5590
+      }
+     ]
+    }
+   ],
+   "por_dono": [
+    {
+     "dono_id": 1,
+     "valor": 15590,
+     "itens": 2
+    }
+   ],
+   "de_terceiros": 0,
+   "pagamentos": []
+  },
+  "faturas": [
+   {
+    "ref": "2026-09",
+    "rotulo": "Setembro 2026",
+    "inicio": "2026-07-30",
+    "fechamento": "2026-08-29",
+    "vencimento": "2026-09-03",
+    "total": 38924,
+    "pago": 33334,
+    "restante": 5590,
+    "status": "vencida"
+   },
+   {
+    "ref": "2026-10",
+    "rotulo": "Outubro 2026",
+    "inicio": "2026-08-30",
+    "fechamento": "2026-09-29",
+    "vencimento": "2026-10-03",
+    "total": 71968,
+    "pago": 0,
+    "restante": 71968,
+    "status": "aberta"
+   },
+   {
+    "ref": "2026-11",
+    "rotulo": "Novembro 2026",
+    "inicio": "2026-09-30",
+    "fechamento": "2026-10-29",
+    "vencimento": "2026-11-03",
+    "total": 48923,
+    "pago": 0,
+    "restante": 48923,
+    "status": "futura"
+   },
+   {
+    "ref": "2026-12",
+    "rotulo": "Dezembro 2026",
+    "inicio": "2026-10-30",
+    "fechamento": "2026-11-29",
+    "vencimento": "2026-12-03",
+    "total": 15590,
+    "pago": 0,
+    "restante": 15590,
+    "status": "futura"
+   },
+   {
+    "ref": "2027-01",
+    "rotulo": "Janeiro 2027",
+    "inicio": "2026-11-30",
+    "fechamento": "2026-12-29",
+    "vencimento": "2027-01-03",
+    "total": 15590,
+    "pago": 0,
+    "restante": 15590,
+    "status": "futura"
+   },
+   {
+    "ref": "2027-02",
+    "rotulo": "Fevereiro 2027",
+    "inicio": "2026-12-30",
+    "fechamento": "2027-01-29",
+    "vencimento": "2027-02-03",
+    "total": 10000,
+    "pago": 0,
+    "restante": 10000,
+    "status": "futura"
+   },
+   {
+    "ref": "2027-03",
+    "rotulo": "Março 2027",
+    "inicio": "2027-01-30",
+    "fechamento": "2027-02-28",
+    "vencimento": "2027-03-03",
+    "total": 10000,
+    "pago": 0,
+    "restante": 10000,
+    "status": "futura"
+   },
+   {
+    "ref": "2027-04",
+    "rotulo": "Abril 2027",
+    "inicio": "2027-03-01",
+    "fechamento": "2027-03-29",
+    "vencimento": "2027-04-03",
+    "total": 10000,
+    "pago": 0,
+    "restante": 10000,
+    "status": "futura"
+   },
+   {
+    "ref": "2027-05",
+    "rotulo": "Maio 2027",
+    "inicio": "2027-03-30",
+    "fechamento": "2027-04-29",
+    "vencimento": "2027-05-03",
+    "total": 10000,
+    "pago": 0,
+    "restante": 10000,
+    "status": "futura"
+   },
+   {
+    "ref": "2027-06",
+    "rotulo": "Junho 2027",
+    "inicio": "2027-04-30",
+    "fechamento": "2027-05-29",
+    "vencimento": "2027-06-03",
+    "total": 10000,
+    "pago": 0,
+    "restante": 10000,
+    "status": "futura"
+   }
+  ],
+  "conta": {
+   "entradas": 1000000,
+   "saidas_debito": 184500,
+   "pagamentos_fatura": 33334,
+   "depositos": 30000,
+   "saques": 5000,
+   "saldo": 907166,
+   "ref": "2026-12",
+   "mes_passado": false,
+   "a_entrar_mes": 500000,
+   "a_sair_mes": 105590,
+   "a_sair_debito": 90000,
+   "a_sair_fatura": 15590,
+   "previsao_fim_mes": 2085095
+  }
+ },
+ "2027-03": {
+  "visao": {
+   "ref": "2027-03",
+   "rotulo": "Março 2027",
+   "mes_atual": false,
+   "conta": {
+    "entradas": 1000000,
+    "saidas_debito": 184500,
+    "pagamentos_fatura": 33334,
+    "depositos": 30000,
+    "saques": 5000,
+    "saldo": 907166,
+    "ref": "2027-03",
+    "mes_passado": false,
+    "a_entrar_mes": 500000,
+    "a_sair_mes": 100000,
+    "a_sair_debito": 90000,
+    "a_sair_fatura": 10000,
+    "previsao_fim_mes": 3279505
+   },
+   "reservas": {
+    "total": 35123,
+    "total_caixinhas": 35000,
+    "total_fundos": 123
+   },
+   "patrimonio": 942289,
+   "fatura": {
+    "ref": "2027-03",
+    "rotulo": "Março 2027",
+    "inicio": "2027-01-30",
+    "fechamento": "2027-02-28",
+    "vencimento": "2027-03-03",
+    "total": 10000,
+    "pago": 0,
+    "restante": 10000,
+    "status": "futura",
+    "por_dono": [
+     {
+      "dono_id": 1,
+      "valor": 10000,
+      "itens": 1
+     }
+    ],
+    "de_terceiros": 0,
+    "pagamentos": []
+   },
+   "faturas_pendentes": 1,
+   "gastos_por_dono": [
+    {
+     "dono": {
+      "id": 1,
+      "nome": "Eu",
+      "tipo": "EU",
+      "cor": "#9085E9",
+      "ativo": 1,
+      "criado_em": "2026-10-01",
+      "usos": 6
+     },
+     "total": 55000
+    },
+    {
+     "dono": {
+      "id": 2,
+      "nome": "Fulano",
+      "tipo": "PESSOA",
+      "cor": "#199E70",
+      "ativo": 1,
+      "criado_em": "2026-09-15",
+      "usos": 2
+     },
+     "total": 45000
+    }
+   ],
+   "total_gasto_mes": 100000,
+   "entradas_mes": 500000,
+   "categorias_eu": [
+    {
+     "categoria_id": null,
+     "nome": "Sem categoria",
+     "cor": "#78909C",
+     "valor": 55000
+    }
+   ]
+  },
+  "mes": {
+   "ref": "2027-03",
+   "rotulo": "Março 2027",
+   "abas": [
+    {
+     "dono": {
+      "id": 1,
+      "nome": "Eu",
+      "tipo": "EU",
+      "cor": "#9085E9",
+      "ativo": 1,
+      "criado_em": "2026-10-01",
+      "usos": 6
+     },
+     "total": 55000,
+     "total_credito": 10000,
+     "total_debito": 45000,
+     "grupos": {
+      "FIXO": {
+       "itens": [
+        {
+         "id": 32,
+         "compra_id": 4,
+         "data": "2027-03-05",
+         "ref": "2027-03",
+         "valor": 90000,
+         "fatura_ref": null,
+         "parcela_num": null,
+         "parcela_total": null,
+         "descricao": "Aluguel",
+         "fluxo": "SAIDA",
+         "natureza": "FIXO",
+         "meio": "DEBITO",
+         "fim_ref": null,
+         "categoria_id": null,
+         "categoria": null,
+         "categoria_cor": null,
+         "partes": [
+          {
+           "dono_id": 1,
+           "valor": 45000
+          },
+          {
+           "dono_id": 2,
+           "valor": 45000
+          }
+         ],
+         "valor_dono": 45000,
+         "futuro": true
+        }
+       ],
+       "total": 45000
+      },
+      "PARCELAMENTO": {
+       "itens": [
+        {
+         "id": 11,
+         "compra_id": 3,
+         "data": "2027-03-05",
+         "ref": "2027-03",
+         "valor": 10000,
+         "fatura_ref": "2027-04",
+         "parcela_num": 10,
+         "parcela_total": 12,
+         "descricao": "Notebook",
+         "fluxo": "SAIDA",
+         "natureza": "PARCELAMENTO",
+         "meio": "CREDITO",
+         "fim_ref": null,
+         "categoria_id": null,
+         "categoria": null,
+         "categoria_cor": null,
+         "partes": [
+          {
+           "dono_id": 1,
+           "valor": 10000
+          }
+         ],
+         "valor_dono": 10000,
+         "futuro": true
+        }
+       ],
+       "total": 10000
+      },
+      "AVULSO": {
+       "itens": [],
+       "total": 0
+      }
+     },
+     "categorias": [
+      {
+       "categoria_id": null,
+       "nome": "Sem categoria",
+       "cor": "#78909C",
+       "valor": 55000
+      }
+     ],
+     "quantidade": 2
+    },
+    {
+     "dono": {
+      "id": 3,
+      "nome": "Empresa X",
+      "tipo": "ORG",
+      "cor": "#D95926",
+      "ativo": 1,
+      "criado_em": "2026-09-15",
+      "usos": 1
+     },
+     "total": 0,
+     "total_credito": 0,
+     "total_debito": 0,
+     "grupos": {
+      "FIXO": {
+       "itens": [],
+       "total": 0
+      },
+      "PARCELAMENTO": {
+       "itens": [],
+       "total": 0
+      },
+      "AVULSO": {
+       "itens": [],
+       "total": 0
+      }
+     },
+     "categorias": [],
+     "quantidade": 0
+    },
+    {
+     "dono": {
+      "id": 2,
+      "nome": "Fulano",
+      "tipo": "PESSOA",
+      "cor": "#199E70",
+      "ativo": 1,
+      "criado_em": "2026-09-15",
+      "usos": 2
+     },
+     "total": 45000,
+     "total_credito": 0,
+     "total_debito": 45000,
+     "grupos": {
+      "FIXO": {
+       "itens": [
+        {
+         "id": 32,
+         "compra_id": 4,
+         "data": "2027-03-05",
+         "ref": "2027-03",
+         "valor": 90000,
+         "fatura_ref": null,
+         "parcela_num": null,
+         "parcela_total": null,
+         "descricao": "Aluguel",
+         "fluxo": "SAIDA",
+         "natureza": "FIXO",
+         "meio": "DEBITO",
+         "fim_ref": null,
+         "categoria_id": null,
+         "categoria": null,
+         "categoria_cor": null,
+         "partes": [
+          {
+           "dono_id": 1,
+           "valor": 45000
+          },
+          {
+           "dono_id": 2,
+           "valor": 45000
+          }
+         ],
+         "valor_dono": 45000,
+         "futuro": true
+        }
+       ],
+       "total": 45000
+      },
+      "PARCELAMENTO": {
+       "itens": [],
+       "total": 0
+      },
+      "AVULSO": {
+       "itens": [],
+       "total": 0
+      }
+     },
+     "categorias": [
+      {
+       "categoria_id": null,
+       "nome": "Sem categoria",
+       "cor": "#78909C",
+       "valor": 45000
+      }
+     ],
+     "quantidade": 1
+    }
+   ],
+   "total_saidas": 100000,
+   "entradas": {
+    "itens": [
+     {
+      "id": 35,
+      "compra_id": 6,
+      "data": "2027-03-05",
+      "ref": "2027-03",
+      "valor": 500000,
+      "fatura_ref": null,
+      "parcela_num": null,
+      "parcela_total": null,
+      "descricao": "Salário",
+      "fluxo": "ENTRADA",
+      "natureza": "FIXO",
+      "meio": "DEBITO",
+      "fim_ref": null,
+      "categoria_id": null,
+      "categoria": null,
+      "categoria_cor": null,
+      "partes": [
+       {
+        "dono_id": 1,
+        "valor": 500000
+       }
+      ],
+      "futuro": true
+     }
+    ],
+    "total": 500000
+   }
+  },
+  "fatura": {
+   "ref": "2027-03",
+   "rotulo": "Março 2027",
+   "inicio": "2027-01-30",
+   "fechamento": "2027-02-28",
+   "vencimento": "2027-03-03",
+   "total": 10000,
+   "pago": 0,
+   "restante": 10000,
+   "status": "futura",
+   "itens": [
+    {
+     "id": 10,
+     "compra_id": 3,
+     "data": "2027-02-05",
+     "ref": "2027-02",
+     "valor": 10000,
+     "fatura_ref": "2027-03",
+     "parcela_num": 9,
+     "parcela_total": 12,
+     "descricao": "Notebook",
+     "fluxo": "SAIDA",
+     "natureza": "PARCELAMENTO",
+     "meio": "CREDITO",
+     "fim_ref": null,
+     "categoria_id": null,
+     "categoria": null,
+     "categoria_cor": null,
+     "partes": [
+      {
+       "dono_id": 1,
+       "valor": 10000
+      }
+     ]
+    }
+   ],
+   "por_dono": [
+    {
+     "dono_id": 1,
+     "valor": 10000,
+     "itens": 1
+    }
+   ],
+   "de_terceiros": 0,
+   "pagamentos": []
+  },
+  "faturas": [
+   {
+    "ref": "2026-09",
+    "rotulo": "Setembro 2026",
+    "inicio": "2026-07-30",
+    "fechamento": "2026-08-29",
+    "vencimento": "2026-09-03",
+    "total": 38924,
+    "pago": 33334,
+    "restante": 5590,
+    "status": "vencida"
+   },
+   {
+    "ref": "2026-10",
+    "rotulo": "Outubro 2026",
+    "inicio": "2026-08-30",
+    "fechamento": "2026-09-29",
+    "vencimento": "2026-10-03",
+    "total": 71968,
+    "pago": 0,
+    "restante": 71968,
+    "status": "aberta"
+   },
+   {
+    "ref": "2026-11",
+    "rotulo": "Novembro 2026",
+    "inicio": "2026-09-30",
+    "fechamento": "2026-10-29",
+    "vencimento": "2026-11-03",
+    "total": 48923,
+    "pago": 0,
+    "restante": 48923,
+    "status": "futura"
+   },
+   {
+    "ref": "2026-12",
+    "rotulo": "Dezembro 2026",
+    "inicio": "2026-10-30",
+    "fechamento": "2026-11-29",
+    "vencimento": "2026-12-03",
+    "total": 15590,
+    "pago": 0,
+    "restante": 15590,
+    "status": "futura"
+   },
+   {
+    "ref": "2027-01",
+    "rotulo": "Janeiro 2027",
+    "inicio": "2026-11-30",
+    "fechamento": "2026-12-29",
+    "vencimento": "2027-01-03",
+    "total": 15590,
+    "pago": 0,
+    "restante": 15590,
+    "status": "futura"
+   },
+   {
+    "ref": "2027-02",
+    "rotulo": "Fevereiro 2027",
+    "inicio": "2026-12-30",
+    "fechamento": "2027-01-29",
+    "vencimento": "2027-02-03",
+    "total": 10000,
+    "pago": 0,
+    "restante": 10000,
+    "status": "futura"
+   },
+   {
+    "ref": "2027-03",
+    "rotulo": "Março 2027",
+    "inicio": "2027-01-30",
+    "fechamento": "2027-02-28",
+    "vencimento": "2027-03-03",
+    "total": 10000,
+    "pago": 0,
+    "restante": 10000,
+    "status": "futura"
+   },
+   {
+    "ref": "2027-04",
+    "rotulo": "Abril 2027",
+    "inicio": "2027-03-01",
+    "fechamento": "2027-03-29",
+    "vencimento": "2027-04-03",
+    "total": 10000,
+    "pago": 0,
+    "restante": 10000,
+    "status": "futura"
+   },
+   {
+    "ref": "2027-05",
+    "rotulo": "Maio 2027",
+    "inicio": "2027-03-30",
+    "fechamento": "2027-04-29",
+    "vencimento": "2027-05-03",
+    "total": 10000,
+    "pago": 0,
+    "restante": 10000,
+    "status": "futura"
+   },
+   {
+    "ref": "2027-06",
+    "rotulo": "Junho 2027",
+    "inicio": "2027-04-30",
+    "fechamento": "2027-05-29",
+    "vencimento": "2027-06-03",
+    "total": 10000,
+    "pago": 0,
+    "restante": 10000,
+    "status": "futura"
+   }
+  ],
+  "conta": {
+   "entradas": 1000000,
+   "saidas_debito": 184500,
+   "pagamentos_fatura": 33334,
+   "depositos": 30000,
+   "saques": 5000,
+   "saldo": 907166,
+   "ref": "2027-03",
+   "mes_passado": false,
+   "a_entrar_mes": 500000,
+   "a_sair_mes": 100000,
+   "a_sair_debito": 90000,
+   "a_sair_fatura": 10000,
+   "previsao_fim_mes": 3279505
+  }
+ },
+ "reservas": {
+  "reservas": [
+   {
+    "id": 1,
+    "nome": "Reserva",
+    "tipo": "CAIXINHA",
+    "saldo_inicial": 10000,
+    "meta": 500000,
+    "criada_em": "2026-09-15",
+    "depositado": 30000,
+    "sacado": 5000,
+    "rendimentos": 0,
+    "saldo": 35000
+   },
+   {
+    "id": 2,
+    "nome": "MXRF11",
+    "tipo": "FUNDO",
+    "saldo_inicial": 0,
+    "meta": null,
+    "criada_em": "2026-09-15",
+    "depositado": 0,
+    "sacado": 0,
+    "rendimentos": 123,
+    "saldo": 123
+   }
+  ],
+  "movimentacoes": [
+   {
+    "id": 3,
+    "reserva_id": 2,
+    "data": "2026-09-07",
+    "tipo": "RENDIMENTO",
+    "valor": 123,
+    "descricao": "",
+    "criado_em": "2026-09-15",
+    "reserva_nome": "MXRF11",
+    "reserva_tipo": "FUNDO"
+   },
+   {
+    "id": 2,
+    "reserva_id": 1,
+    "data": "2026-09-06",
+    "tipo": "SAQUE",
+    "valor": 5000,
+    "descricao": "",
+    "criado_em": "2026-09-15",
+    "reserva_nome": "Reserva",
+    "reserva_tipo": "CAIXINHA"
+   },
+   {
+    "id": 1,
+    "reserva_id": 1,
+    "data": "2026-09-05",
+    "tipo": "DEPOSITO",
+    "valor": 30000,
+    "descricao": "guardei",
+    "criado_em": "2026-09-15",
+    "reserva_nome": "Reserva",
+    "reserva_tipo": "CAIXINHA"
+   }
+  ],
+  "total": 35123,
+  "total_caixinhas": 35000,
+  "total_fundos": 123
+ },
+ "estado": {
+  "hoje": "2026-09-15",
+  "mes_atual": "2026-09",
+  "fatura_atual": "2026-10",
+  "config": {
+   "dia_fechamento": 29,
+   "dia_vencimento": 3,
+   "saldo_inicial": 150000,
+   "data_inicio": "2026-08-01"
+  },
+  "donos": [
+   {
+    "id": 1,
+    "nome": "Eu",
+    "tipo": "EU",
+    "cor": "#9085E9",
+    "ativo": 1,
+    "criado_em": "2026-10-01",
+    "usos": 6
+   },
+   {
+    "id": 3,
+    "nome": "Empresa X",
+    "tipo": "ORG",
+    "cor": "#D95926",
+    "ativo": 1,
+    "criado_em": "2026-09-15",
+    "usos": 1
+   },
+   {
+    "id": 2,
+    "nome": "Fulano",
+    "tipo": "PESSOA",
+    "cor": "#199E70",
+    "ativo": 1,
+    "criado_em": "2026-09-15",
+    "usos": 2
+   },
+   {
+    "id": 4,
+    "nome": "Arquivado",
+    "tipo": "PESSOA",
+    "cor": "#3987E5",
+    "ativo": 0,
+    "criado_em": "2026-09-15",
+    "usos": 1
+   }
+  ],
+  "categorias": [
+   {
+    "id": 1,
+    "nome": "Alimentação",
+    "cor": "#FF8A65",
+    "ativa": 1
+   },
+   {
+    "id": 4,
+    "nome": "Assinaturas",
+    "cor": "#B388FF",
+    "ativa": 1
+   },
+   {
+    "id": 9,
+    "nome": "Compras",
+    "cor": "#9575CD",
+    "ativa": 1
+   },
+   {
+    "id": 8,
+    "nome": "Educação",
+    "cor": "#4FC3F7",
+    "ativa": 1
+   },
+   {
+    "id": 11,
+    "nome": "Impostos",
+    "cor": "#A1887F",
+    "ativa": 1
+   },
+   {
+    "id": 7,
+    "nome": "Lazer",
+    "cor": "#F06292",
+    "ativa": 1
+   },
+   {
+    "id": 2,
+    "nome": "Mercado",
+    "cor": "#FFD54F",
+    "ativa": 1
+   },
+   {
+    "id": 5,
+    "nome": "Moradia",
+    "cor": "#7986CB",
+    "ativa": 1
+   },
+   {
+    "id": 13,
+    "nome": "Outros",
+    "cor": "#78909C",
+    "ativa": 1
+   },
+   {
+    "id": 14,
+    "nome": "Pets",
+    "cor": "#66BB6A",
+    "ativa": 1
+   },
+   {
+    "id": 12,
+    "nome": "Salário",
+    "cor": "#66BB6A",
+    "ativa": 1
+   },
+   {
+    "id": 6,
+    "nome": "Saúde",
+    "cor": "#EF5350",
+    "ativa": 1
+   },
+   {
+    "id": 10,
+    "nome": "Serviços",
+    "cor": "#90A4AE",
+    "ativa": 1
+   },
+   {
+    "id": 3,
+    "nome": "Transporte",
+    "cor": "#4DD0E1",
+    "ativa": 1
+   }
+  ]
+ }
+}

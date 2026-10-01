@@ -1,9 +1,9 @@
 /* Formulario de lancamento: saida/entrada, avulso/parcelado/fixo e a
    DIVISAO entre donos (igual ou por valor).
 
-   O front mostra a previa da divisao, mas quem decide e o back-end: ele
-   recalcula tudo e recusa se a soma nao fechar no centavo. As funcoes
-   dividirIgual/faturaDe abaixo sao espelhos das do Python, so para a previa. */
+   O formulario mostra a previa da divisao, mas quem decide sao as regras
+   (js/nucleo/regras.js): elas recalculam tudo e recusam se a soma nao fechar
+   no centavo. dividirIgual/faturaDe abaixo sao copias simples, so para a previa. */
 
 function dividirIgual(total, n) {
   const base = Math.floor(total / n);
@@ -27,7 +27,7 @@ const FormLancamento = {
       id: null, fluxo, natureza: "AVULSO", meio: fluxo === "ENTRADA" ? "DEBITO" : "CREDITO",
       descricao: "", valor: 0, data: App.dataPadrao(), categoria_id: "",
       num_parcelas: 2, parcela_inicial: 1, fim_ref: "", observacao: "",
-      donos: [dono || 1], modo: "igual", partes: {},
+      donos: [dono || App.estado.id_eu], modo: "igual", partes: {},
     };
 
     if (compraId) {
@@ -171,7 +171,7 @@ const FormLancamento = {
     $("#chips-dono", corpo).addEventListener("click", (ev) => {
       const b = ev.target.closest("[data-dono]");
       if (!b) return;
-      const id = Number(b.dataset.dono);
+      const id = b.dataset.dono;
       if (f.donos.includes(id)) {
         if (f.donos.length === 1) return; // sempre fica pelo menos um
         f.donos = f.donos.filter((d) => d !== id);
@@ -190,7 +190,7 @@ const FormLancamento = {
     $("#partes", corpo).addEventListener("click", (ev) => {
       const b = ev.target.closest("[data-resto]");
       if (!b) return;
-      const id = Number(b.dataset.resto);
+      const id = b.dataset.resto;
       const outros = f.donos.filter((d) => d !== id).reduce((s, d) => s + (f.partes[d] || 0), 0);
       f.partes[id] = Math.max(f.valor - outros, 0);
       this._partes();
@@ -205,9 +205,10 @@ const FormLancamento = {
   },
 
   _ordemDonos() {
-    // mesma ordem do back-end: "Eu" primeiro, depois na ordem da lista
+    // mesma ordem das regras: "Eu" primeiro, depois na ordem da lista
+    const eu = App.estado.id_eu;
     const disp = this._donosDisponiveis().map((d) => d.id);
-    return [...this.f.donos].sort((a, b) => (a !== 1) - (b !== 1) || disp.indexOf(a) - disp.indexOf(b));
+    return [...this.f.donos].sort((a, b) => (a !== eu) - (b !== eu) || disp.indexOf(a) - disp.indexOf(b));
   },
 
   _atualizar() {
@@ -216,7 +217,7 @@ const FormLancamento = {
     if (f.fluxo === "ENTRADA") {
       if (f.natureza === "PARCELAMENTO") f.natureza = "AVULSO";
       f.meio = "DEBITO";
-      f.donos = [1];
+      f.donos = [App.estado.id_eu];
     }
     const marca = (sel, attr, v) => $$(`${sel} [data-${attr}]`, corpo).forEach((b) => b.classList.toggle("ativo", b.dataset[attr] === v));
     marca("#seg-fluxo", "fluxo", f.fluxo);
@@ -331,7 +332,7 @@ const FormLancamento = {
 
     await api.salvarCompra({
       descricao: f.descricao, fluxo: f.fluxo, natureza: f.natureza, meio: f.meio,
-      valor: f.valor, data: f.data, categoria_id: f.categoria_id ? Number(f.categoria_id) : null,
+      valor: f.valor, data: f.data, categoria_id: f.categoria_id || null,
       num_parcelas: f.num_parcelas, parcela_inicial: f.parcela_inicial,
       fim_ref: f.fim_ref || null, observacao: f.observacao, divisao,
     }, f.id);

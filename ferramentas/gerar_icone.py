@@ -4,9 +4,10 @@ Gera o icone do NuControle: um "N" branco sobre roxo com uma moeda de "$".
     python ferramentas/gerar_icone.py
 
 Saidas (versionadas no git, entao so precisa rodar de novo se mudar o desenho):
-    assets/icone.ico        icone do .exe (16 a 256 px)
-    assets/icone.png        256 px
-    frontend/img/icone.png  64 px, usado na barra lateral e como favicon
+    frontend/img/icone.png      64 px, usado na barra lateral e como favicon
+    frontend/img/icone-180.png  iPhone ("Adicionar a Tela de Inicio")
+    frontend/img/icone-192.png  Android / manifest
+    frontend/img/icone-512.png  Android / manifest (tela de abertura)
 
 Precisa de Pillow (so para gerar; o app nao depende dele).
 
@@ -83,25 +84,12 @@ def desenhar(com_cifrao: bool) -> Image.Image:
 
 def main() -> None:
     grande = desenhar(com_cifrao=True)
-    liso = desenhar(com_cifrao=False)
-
-    def em(tam: int) -> Image.Image:
-        return (grande if tam >= 32 else liso).resize((tam, tam), Image.LANCZOS)
-
-    tamanhos = [256, 128, 64, 48, 32, 24, 16]
-    imagens = [em(t) for t in tamanhos]
-
-    (RAIZ / "assets").mkdir(exist_ok=True)
-    (RAIZ / "frontend" / "img").mkdir(exist_ok=True)
-    imagens[0].save(
-        RAIZ / "assets" / "icone.ico",
-        format="ICO",
-        sizes=[(t, t) for t in tamanhos],
-        append_images=imagens[1:],  # cada tamanho com o seu desenho, nao reamostrado
-    )
-    imagens[0].save(RAIZ / "assets" / "icone.png")
-    em(64).save(RAIZ / "frontend" / "img" / "icone.png")
-    print("ok:", ", ".join(f"{t}px" for t in tamanhos))
+    pasta = RAIZ / "frontend" / "img"
+    pasta.mkdir(exist_ok=True)
+    grande.resize((64, 64), Image.LANCZOS).save(pasta / "icone.png")
+    for tam in (180, 192, 512):
+        grande.resize((tam, tam), Image.LANCZOS).save(pasta / f"icone-{tam}.png")
+    print("ok: 64, 180, 192, 512 px")
 
 
 if __name__ == "__main__":

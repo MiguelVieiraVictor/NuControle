@@ -83,7 +83,7 @@ svg { width: 18px; height: 18px; flex: none; }
 .mes-global-rotulo { font-size: 11.5px; text-transform: uppercase; letter-spacing: .6px; color: var(--texto-3); padding: 0 4px; }
 .mes-global .seletor-mes { justify-content: space-between; background: var(--bg); }
 .mes-global .seletor-mes span { min-width: 0; flex: 1; font-size: 13.5px; }
-.mes-global.outro-mes .seletor-mes { border-color: var(--roxo); background: var(--roxo-fundo); }
+.mes-global .seletor-mes.outro-mes { border-color: var(--roxo); background: var(--roxo-fundo); }
 .mes-hoje { border: 0; background: none; color: var(--roxo); cursor: pointer; font-size: 12.5px; padding: 2px 4px; text-align: left; }
 .mes-hoje:hover { text-decoration: underline; }
 
@@ -373,3 +373,126 @@ svg { width: 18px; height: 18px; flex: none; }
 .backup-linha p { margin: 4px 0 0; }
 .backup-linha .btn { flex: none; }
 .nota.alerta { color: var(--alerta); }
+
+/* ---------------------------------------------------------------- entrada (login) */
+
+.entrada { min-height: 100vh; min-height: 100dvh; display: grid; place-items: center; padding: 24px 16px; }
+.entrada-caixa {
+  width: min(100%, 400px); display: flex; flex-direction: column; gap: 18px;
+  background: var(--superficie); border: 1px solid var(--borda-forte); border-radius: 18px;
+  padding: 28px 24px; box-shadow: var(--sombra);
+}
+.entrada-marca { justify-content: center; padding: 0 0 4px; }
+.entrada-marca .marca-logo { width: 42px; height: 42px; }
+.entrada-marca .marca-nome { font-size: 20px; }
+.entrada-msg { margin: 0; padding: 10px 12px; border-radius: 8px; font-size: 13px; }
+.entrada-msg.erro { background: rgba(242,92,92,.12); color: #FFB4B4; }
+.entrada-msg.info { background: var(--roxo-fundo); color: var(--texto); }
+.entrada .nota { margin: 0; text-align: center; }
+.btn-largo { width: 100%; justify-content: center; padding: 11px 14px; }
+.link { border: 0; background: none; padding: 2px; color: var(--roxo); cursor: pointer; font-size: 13px; text-align: center; text-decoration: none; }
+.link:hover { text-decoration: underline; }
+
+/* ---------------------------------------------------------------- conta / dados */
+
+.conta-usuario { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 12px 4px 0; border-top: 1px solid var(--borda); }
+.conta-usuario .nota { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.aviso-importar { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; border-color: rgba(169,112,255,.4); background: linear-gradient(160deg, #2A1A45, var(--superficie) 70%); }
+.aviso-importar p { margin: 4px 0 0; }
+.destaque-importar { border-bottom: 1px solid var(--borda); margin-bottom: 4px; }
+label.btn { position: relative; }
+
+/* ---------------------------------------------------------------- celular */
+
+.barra-movel, .btn-flutuante, .gaveta-fundo { display: none; }
+.lateral { overflow-y: auto; }
+
+/* sem mouse (toque): os botoes de acao das tabelas ficam sempre visiveis */
+@media (hover: none) {
+  .tabela .acoes .btn-icone { opacity: 1; }
+}
+
+@media (max-width: 820px) {
+  .app { display: block; height: auto; }
+  .input, select.input, textarea.input { font-size: 16px; } /* evita o zoom automatico do iPhone */
+  .input-grande { font-size: 22px; }
+
+  .barra-movel {
+    display: flex; align-items: center; gap: 10px;
+    position: sticky; top: 0; z-index: 30;
+    padding: 8px 12px; padding-top: max(8px, env(safe-area-inset-top));
+    background: var(--superficie); border-bottom: 1px solid var(--borda);
+  }
+  .barra-movel #btn-menu { width: 40px; height: 40px; color: var(--texto); }
+  .barra-movel #btn-menu svg { width: 22px; height: 22px; }
+  .barra-movel .seletor-mes { flex: 1; justify-content: space-between; background: var(--bg); }
+  .barra-movel .seletor-mes span { min-width: 0; flex: 1; font-size: 14px; }
+  .barra-movel .seletor-mes .btn-icone { width: 36px; height: 36px; }
+  .barra-movel .seletor-mes.outro-mes { border-color: var(--roxo); background: var(--roxo-fundo); }
+
+  /* a barra lateral vira uma gaveta que desliza da esquerda */
+  .lateral {
+    position: fixed; top: 0; bottom: 0; left: 0; z-index: 40;
+    width: min(84vw, 300px);
+    padding-top: max(22px, env(safe-area-inset-top));
+    transform: translateX(-100%); transition: transform .2s ease-out;
+    box-shadow: var(--sombra);
+  }
+  body.menu-aberto .lateral { transform: none; }
+  body.menu-aberto { overflow: hidden; }
+  .gaveta-fundo { display: block; position: fixed; inset: 0; z-index: 35; background: rgba(6, 4, 10, 0.6); }
+  .lateral .btn-novo { display: none; }
+  .nav button { padding: 12px; }
+
+  .btn-flutuante {
+    display: grid; place-items: center;
+    position: fixed; right: 16px; bottom: max(16px, env(safe-area-inset-bottom)); z-index: 25;
+    width: 56px; height: 56px; border-radius: 50%; border: 0;
+    background: var(--roxo-forte); color: #fff; cursor: pointer; box-shadow: var(--sombra);
+  }
+  .btn-flutuante svg { width: 26px; height: 26px; }
+
+  .principal { overflow: visible; padding: 18px 14px 100px; }
+  .topo { margin-bottom: 16px; }
+  .topo h1 { font-size: 22px; }
+  .conteudo { gap: 14px; }
+  .card { padding: 16px 14px; }
+  .grade { gap: 14px; }
+  .grade-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .tile { padding: 12px 14px; }
+  .tile-valor { font-size: 19px; }
+  .cab-fatura .total { font-size: 26px; }
+  .cab-fatura > div:last-child { text-align: left !important; }
+  .card-topo { flex-wrap: wrap; }
+  .barra-linha { grid-template-columns: minmax(70px, 120px) minmax(30px, 1fr) auto; gap: 8px; }
+  .avisos { left: 16px; right: 16px; bottom: 84px; }
+  .parte { grid-template-columns: 1fr 130px; }
+  .backup-linha { flex-wrap: wrap; }
+
+  /* modal ocupa a largura toda e cola embaixo, como no app do banco */
+  .modal { width: 100%; max-width: none !important; margin: auto 0 0; }
+  .modal-caixa { border-radius: 18px 18px 0 0; max-height: 92vh; max-height: 92dvh; padding-bottom: env(safe-area-inset-bottom); }
+  .modal-rodape { flex-wrap: wrap; }
+
+  /* tabelas de lancamentos: cada linha vira um bloco
+       descricao ............ valor
+       data  etiquetas ...... acoes */
+  .tabela-m thead { display: none; }
+  .tabela-m, .tabela-m tbody, .tabela-m tfoot { display: block; }
+  .tabela-m tr { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; padding: 10px 2px; border-bottom: 1px solid var(--borda); }
+  .tabela-m tbody tr:last-child { border-bottom: 0; }
+  .tabela-m td { display: block; padding: 0; border: 0; order: 5; overflow: visible; }
+  .tabela-m td:has(> .desc), .tabela-m td.desc { order: 1; flex: 1 1 0; min-width: 0; }
+  .tabela-m td.num { order: 2; margin-left: auto; }
+  .tabela-m tbody tr::after { content: ""; order: 3; flex-basis: 100%; height: 0; } /* quebra a linha */
+  .tabela-m td.data { order: 4; font-size: 12px; }
+  .tabela-m td.acoes { order: 6; margin-left: auto; width: auto; }
+  .tabela .acoes .btn-icone { opacity: 1; }
+
+  /* no formulario, os seletores (Saida/Entrada, Avulso/Parcelado/Fixo) ficam um por linha */
+  .linha-campos:has(> .segmento) { grid-template-columns: 1fr; }
+  .segmento button { padding: 8px 10px; }
+  .tabela-m tfoot tr { justify-content: space-between; border-top: 1px solid var(--borda-forte); border-bottom: 0; }
+  .tabela-m tfoot td { border: 0; }
+  .tabela-m tbody tr:hover td { background: none; }
+}

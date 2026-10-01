@@ -1,5 +1,5 @@
-/* As seis telas. Cada uma recebe o elemento de conteudo, busca seus dados no
-   Python e desenha. Nenhuma guarda estado proprio alem do que esta em App.ui. */
+/* As seis telas. Cada uma recebe o elemento de conteudo, busca seus dados na
+   api (js/api.js) e desenha. Nenhuma guarda estado proprio alem do que esta em App.ui. */
 
 const NATUREZA_ROTULO = { FIXO: "Fixos", PARCELAMENTO: "Parcelamentos", AVULSO: "Avulsos" };
 const STATUS_ROTULO = { aberta: "Aberta", fechada: "Fechada", vencida: "Vencida", paga: "Paga", vazia: "Sem gastos", anterior: "Antes do controle", futura: "Futura" };
@@ -49,20 +49,20 @@ function ligarAcoesLanc(el) {
     const b = ev.target.closest("[data-editar],[data-pular],[data-encerrar],[data-excluir]");
     if (!b) return;
     try {
-      if (b.dataset.editar) return FormLancamento.abrir({ compraId: Number(b.dataset.editar) });
+      if (b.dataset.editar) return FormLancamento.abrir({ compraId: b.dataset.editar });
       if (b.dataset.pular) {
         if (!(await confirmar("Pular este mês", "Remover só este mês do gasto fixo? Os outros meses continuam.", { botao: "Pular mês" }))) return;
-        await api.pularMesFixo(Number(b.dataset.pular));
+        await api.pularMesFixo(b.dataset.pular);
         avisar("Mês removido do fixo.");
       } else if (b.dataset.encerrar) {
         if (!(await confirmar("Encerrar fixo", `O fixo termina em ${rotuloMes(b.dataset.ref)}. Os meses seguintes serão removidos.`, { botao: "Encerrar" }))) return;
-        await api.encerrarFixo(Number(b.dataset.encerrar), b.dataset.ref);
+        await api.encerrarFixo(b.dataset.encerrar, b.dataset.ref);
         avisar("Fixo encerrado.");
       } else if (b.dataset.excluir) {
         const extra = b.dataset.nat === "PARCELAMENTO" ? " Todas as parcelas serão removidas."
           : b.dataset.nat === "FIXO" ? " Todos os meses do fixo, inclusive os passados, serão removidos." : "";
         if (!(await confirmar("Excluir lançamento", `Excluir “${esc(b.dataset.nome)}”?${extra}`, { botao: "Excluir" }))) return;
-        await api.excluirCompra(Number(b.dataset.excluir));
+        await api.excluirCompra(b.dataset.excluir);
         avisar("Lançamento excluído.");
       }
       App.recarregar();
@@ -74,6 +74,7 @@ const Telas = {
   /* ============================================================ Visao geral */
   async visao(el) {
     const v = await api.visaoGeral(App.ui.mes);
+    const vazia = await api.contaVazia();
     App.cabecalho("Visão geral", v.mes_atual ? v.rotulo : `${v.rotulo} · saldo e caixinhas são os de hoje`);
     const c = v.conta;
     const f = v.fatura;
@@ -94,6 +95,11 @@ const Telas = {
     const cats = v.categorias_eu.map((g) => ({ nome: g.nome, cor: g.cor, valor: g.valor }));
 
     el.innerHTML = `
+      ${vazia ? `<div class="card aviso-importar">
+        <div><b>Já usava o NuControle no computador?</b>
+          <p class="nota">Traga seus lançamentos, terceiros e caixinhas do app antigo. Dá para fazer isso enquanto esta conta estiver vazia.</p></div>
+        <button class="btn btn-primario" data-ir-ajustes>Importar dados</button>
+      </div>` : ""}
       <div class="grade grade-tiles">
         <div class="tile destaque">
           <div class="tile-rotulo">Saldo na conta</div>
@@ -130,6 +136,7 @@ const Telas = {
         ${Graficos.barrasOrdenadas(cats, { vazio: "Nenhum gasto seu neste mês ainda." })}
       </div>`;
 
+    el.querySelector("[data-ir-ajustes]")?.addEventListener("click", () => App.ir("ajustes"));
     el.querySelector("[data-ir]")?.addEventListener("click", (ev) => {
       App.ui.fatura = ev.currentTarget.dataset.fatura;
       App.ir("cartao");
@@ -142,7 +149,7 @@ const Telas = {
     const m = await api.mes(ui.mes);
     App.cabecalho(`Gastos de ${m.rotulo}`, "Cada aba mostra só a parte daquele dono em cada compra · troque o mês na barra lateral");
 
-    if (!m.abas.some((a) => a.dono.id === ui.aba) && ui.aba !== "entradas") ui.aba = 1;
+    if (!m.abas.some((a) => a.dono.id === ui.aba) && ui.aba !== "entradas") ui.aba = App.estado.id_eu;
     const abas = m.abas.map((a) => `
       <button class="aba ${a.dono.id === ui.aba ? "ativa" : ""} ${a.dono.ativo ? "" : "arquivado"}" data-aba="${a.dono.id}">
         <span class="ponto" style="background:${esc(a.dono.cor)}"></span>${esc(a.dono.nome)}
@@ -162,12 +169,12 @@ const Telas = {
     $("#abas", el).addEventListener("click", (ev) => {
       const b = ev.target.closest("[data-aba]");
       if (!b) return;
-      ui.aba = b.dataset.aba === "entradas" ? "entradas" : Number(b.dataset.aba);
+      ui.aba = b.dataset.aba;
       App.recarregar();
     });
     ligarAcoesLanc(el);
     el.querySelector("[data-novo-dono]")?.addEventListener("click", (ev) =>
-      FormLancamento.abrir({ dono: Number(ev.currentTarget.dataset.novoDono) }));
+      FormLancamento.abrir({ dono: ev.currentTarget.dataset.novoDono }));
     el.querySelector("[data-nova-entrada]")?.addEventListener("click", () => FormLancamento.abrir({ fluxo: "ENTRADA" }));
   },
 
@@ -186,7 +193,7 @@ const Telas = {
         </tr>`).join("");
       return `<div class="secao-nat">
         <div class="secao-nat-topo"><h3>${NATUREZA_ROTULO[n]}</h3><span class="num">${reais(g.total)}</span></div>
-        ${g.itens.length ? `<table class="tabela tabela-lanc"><thead><tr>
+        ${g.itens.length ? `<table class="tabela tabela-lanc tabela-m"><thead><tr>
             <th class="c-data">Data</th><th>Descrição</th><th class="c-meio">Meio</th><th class="c-div">Dividido com</th>
             <th class="num c-valor">Parte</th><th class="c-acoes"></th>
           </tr></thead><tbody>${linhas}</tbody></table>`
@@ -230,7 +237,7 @@ const Telas = {
     return `<div class="card">
       <div class="card-topo"><h2>Entradas de ${esc(m.rotulo)}</h2>
         <button class="btn btn-p" data-nova-entrada>${icone("mais")}Nova entrada</button></div>
-      ${linhas ? `<table class="tabela"><thead><tr><th>Data</th><th>Descrição</th><th>Tipo</th><th class="num">Valor</th><th></th></tr></thead>
+      ${linhas ? `<table class="tabela tabela-m"><thead><tr><th>Data</th><th>Descrição</th><th>Tipo</th><th class="num">Valor</th><th></th></tr></thead>
         <tbody>${linhas}</tbody><tfoot><tr><td colspan="3">Total</td><td class="num">${reais(m.entradas.total)}</td><td></td></tr></tfoot></table>`
         : `<div class="vazio">Nenhuma entrada neste mês.</div>`}
     </div>`;
@@ -316,7 +323,7 @@ const Telas = {
 
       <div class="card">
         <div class="card-topo"><h2>${sel ? `Itens de ${esc(nomeSel)}` : "Todos os itens"}</h2><span class="dica">${itens.length} item(ns)</span></div>
-        ${itens.length ? `<table class="tabela"><thead><tr>
+        ${itens.length ? `<table class="tabela tabela-m"><thead><tr>
           <th>Data</th><th>Descrição</th><th>Dono(s)</th><th class="num">Valor</th>${sel ? `<th class="num">Parte de ${esc(nomeSel)}</th>` : ""}<th></th>
         </tr></thead><tbody>${linhas}</tbody>
         <tfoot><tr><td colspan="${sel ? 4 : 3}">Total${sel ? ` de ${esc(nomeSel)}` : ""}</td><td class="num">${reais(totalSel)}</td><td></td></tr></tfoot></table>`
@@ -333,7 +340,7 @@ const Telas = {
     $("#empilhada", el).addEventListener("click", (ev) => {
       const b = ev.target.closest("[data-dono]");
       if (!b) return;
-      const id = Number(b.dataset.dono);
+      const id = b.dataset.dono;
       ui.donoFatura = ui.donoFatura === id ? null : id;
       App.recarregar();
     });
@@ -343,7 +350,7 @@ const Telas = {
       const b = ev.target.closest("[data-excluir-pag]");
       if (!b) return;
       if (!(await confirmar("Excluir pagamento", "Remover este pagamento da fatura?", { botao: "Excluir" }))) return;
-      try { await api.excluirPagamento(Number(b.dataset.excluirPag)); avisar("Pagamento removido."); App.recarregar(); }
+      try { await api.excluirPagamento(b.dataset.excluirPag); avisar("Pagamento removido."); App.recarregar(); }
       catch (e) { avisar(e.message, "erro"); }
     });
     ligarAcoesLanc(el);
@@ -419,23 +426,23 @@ const Telas = {
       </div>
       ${cards ? `<div class="cards-reserva">${cards}</div>` : `<div class="card vazio">Nenhuma caixinha ainda. Crie a primeira no botão acima.</div>`}
       <div class="card"><div class="card-topo"><h2>Movimentações</h2></div>
-        ${movs ? `<table class="tabela"><thead><tr><th>Data</th><th>Caixinha</th><th>Tipo</th><th class="num">Valor</th><th></th></tr></thead><tbody>${movs}</tbody></table>`
+        ${movs ? `<table class="tabela tabela-m"><thead><tr><th>Data</th><th>Caixinha</th><th>Tipo</th><th class="num">Valor</th><th></th></tr></thead><tbody>${movs}</tbody></table>`
           : `<div class="nota">Nenhuma movimentação.</div>`}
       </div>`;
 
     el.addEventListener("click", async (ev) => {
       const b = ev.target.closest("[data-mov],[data-editar-res],[data-excluir-res],[data-excluir-mov]");
       if (!b) return;
-      const res = (id) => r.reservas.find((x) => x.id === Number(id));
+      const res = (id) => r.reservas.find((x) => x.id === id);
       try {
         if (b.dataset.mov) return this._formMov(res(b.dataset.res), b.dataset.mov);
         if (b.dataset.editarRes) return this._formReserva(res(b.dataset.editarRes));
         if (b.dataset.excluirRes) {
           if (!(await confirmar("Excluir caixinha", `Excluir “${esc(b.dataset.nome)}” e todo o histórico dela?`, { botao: "Excluir" }))) return;
-          await api.excluirReserva(Number(b.dataset.excluirRes));
+          await api.excluirReserva(b.dataset.excluirRes);
         } else if (b.dataset.excluirMov) {
           if (!(await confirmar("Excluir movimentação", "Remover esta movimentação?", { botao: "Excluir" }))) return;
-          await api.excluirMovReserva(Number(b.dataset.excluirMov));
+          await api.excluirMovReserva(b.dataset.excluirMov);
         }
         avisar("Removido.");
         App.recarregar();
@@ -536,13 +543,13 @@ const Telas = {
       const b = ev.target.closest("[data-editar-dono],[data-arquivar],[data-excluir-dono]");
       if (!b) return;
       try {
-        if (b.dataset.editarDono) return this._formDono(App.dono(Number(b.dataset.editarDono)));
+        if (b.dataset.editarDono) return this._formDono(App.dono(b.dataset.editarDono));
         if (b.dataset.arquivar) {
-          await api.arquivarDono(Number(b.dataset.arquivar), b.dataset.ativo === "1");
+          await api.arquivarDono(b.dataset.arquivar, b.dataset.ativo === "1");
           avisar(b.dataset.ativo === "1" ? "Terceiro reativado." : "Terceiro arquivado.");
         } else {
           if (!(await confirmar("Excluir terceiro", `Excluir “${esc(b.dataset.nome)}”?`, { botao: "Excluir" }))) return;
-          await api.excluirDono(Number(b.dataset.excluirDono));
+          await api.excluirDono(b.dataset.excluirDono);
           avisar("Terceiro excluído.");
         }
         await App.recarregarEstado();
@@ -620,27 +627,52 @@ const Telas = {
           <table class="tabela"><tbody>${cats}</tbody></table>
         </div>
       </div>
-      <div class="card">
-        <div class="card-topo"><h2>Backup</h2><span class="dica">para guardar ou levar para outro computador</span></div>
-        <div class="backup-linha">
-          <div>
-            <b>Salvar backup</b>
-            <p class="nota">Gera uma cópia de todos os seus dados num arquivo <code>.db</code>, onde você escolher (pen drive, nuvem…).</p>
+      <div class="grade grade-2">
+        <div class="card">
+          <div class="card-topo"><h2>Sua conta</h2></div>
+          <div class="backup-linha">
+            <div><b>${esc(Sessao.email)}</b><p class="nota">Seus dados ficam guardados só para esta conta.</p></div>
           </div>
-          <button class="btn btn-primario" id="btn-salvar-backup">Salvar backup…</button>
-        </div>
-        <div class="backup-linha">
-          <div>
-            <b>Restaurar backup</b>
-            <p class="nota">Substitui os dados deste computador pelos do arquivo. Antes, uma cópia dos dados atuais é guardada em <code>dados\\backups</code>.</p>
+          <div class="backup-linha">
+            <div><b>Senha</b><p class="nota">Troque quando quiser.</p></div>
+            <button class="btn" id="btn-trocar-senha">Trocar senha</button>
           </div>
-          <button class="btn" id="btn-restaurar-backup">Restaurar backup…</button>
+          <div class="backup-linha">
+            <div><b>Sair</b><p class="nota">Encerra o acesso neste aparelho.</p></div>
+            <button class="btn btn-perigo" id="btn-sair-ajustes">Sair</button>
+          </div>
         </div>
-        <p class="nota" style="margin:12px 0 0">Banco em uso: ${esc(E.banco)}</p>
+        <div class="card">
+          <div class="card-topo"><h2>Seus dados</h2><span class="dica">backup e importação</span></div>
+          <div id="bloco-importar"></div>
+          <div class="backup-linha">
+            <div><b>Baixar backup</b>
+              <p class="nota">Um arquivo <code>.json</code> com tudo da sua conta. Guarde em lugar seguro: o plano grátis do servidor não faz backup sozinho.</p></div>
+            <button class="btn btn-primario" id="btn-baixar-backup">Baixar</button>
+          </div>
+          <div class="backup-linha">
+            <div><b>Restaurar backup</b>
+              <p class="nota">Troca <b>todos</b> os dados desta conta pelos do arquivo. Antes, baixe um backup do que está aqui.</p></div>
+            <label class="btn">Restaurar…<input type="file" accept=".json,application/json" id="arq-backup" hidden></label>
+          </div>
+        </div>
       </div>`;
 
-    $("#btn-salvar-backup", el).addEventListener("click", () => this._salvarBackup());
-    $("#btn-restaurar-backup", el).addEventListener("click", () => this._restaurarBackup());
+    $("#btn-trocar-senha", el).addEventListener("click", () => this._trocarSenha());
+    $("#btn-sair-ajustes", el).addEventListener("click", () => Sessao.sair());
+    $("#btn-baixar-backup", el).addEventListener("click", () => this._baixarBackup());
+    $("#arq-backup", el).addEventListener("change", (ev) => this._restaurar(ev.target, "backup"));
+    api.contaVazia().then((vazia) => {
+      if (!vazia) return;
+      $("#bloco-importar", el).innerHTML = `
+        <div class="backup-linha destaque-importar">
+          <div><b>Importar do app antigo</b>
+            <p class="nota">Traga tudo do NuControle de computador: escolha o arquivo <code>nucontrole-v2.db</code>
+            (fica em <code>%APPDATA%\\NuControle\\dados</code>). Só aparece enquanto a conta está vazia.</p></div>
+          <label class="btn btn-primario">Escolher arquivo…<input type="file" accept=".db" id="arq-desktop" hidden></label>
+        </div>`;
+      $("#arq-desktop", el).addEventListener("change", (ev) => this._restaurar(ev.target, "desktop"));
+    }).catch(() => {});
     mascararDinheiro($("#c-saldo", el));
     $("#form-config", el).addEventListener("submit", async (ev) => {
       ev.preventDefault();
@@ -658,10 +690,10 @@ const Telas = {
     el.addEventListener("click", async (ev) => {
       const b = ev.target.closest("[data-editar-cat],[data-excluir-cat]");
       if (!b) return;
-      if (b.dataset.editarCat) return this._formCategoria(E.categorias.find((c) => c.id === Number(b.dataset.editarCat)));
+      if (b.dataset.editarCat) return this._formCategoria(E.categorias.find((c) => c.id === b.dataset.editarCat));
       if (!(await confirmar("Excluir categoria", `Excluir “${esc(b.dataset.nome)}”? Os lançamentos dela ficam sem categoria.`, { botao: "Excluir" }))) return;
       try {
-        await api.excluirCategoria(Number(b.dataset.excluirCat));
+        await api.excluirCategoria(b.dataset.excluirCat);
         avisar("Categoria excluída.");
         await App.recarregarEstado();
         App.recarregar();
@@ -669,41 +701,73 @@ const Telas = {
     });
   },
 
-  async _salvarBackup() {
+  async _baixarBackup() {
     try {
-      const r = await api.salvarBackup();
-      if (r) avisar(`Backup salvo em ${r.caminho}`);
+      const texto = await api.backup();
+      const url = URL.createObjectURL(new Blob([texto], { type: "application/json" }));
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `nucontrole_${App.estado.hoje}.json`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 10_000);
+      avisar("Backup baixado.");
     } catch (e) { avisar(e.message, "erro"); }
   },
 
-  async _restaurarBackup() {
+  /** origem "desktop" (nucontrole-v2.db) ou "backup" (.json): le, mostra o
+      resumo e so troca os dados depois da confirmacao. */
+  async _restaurar(input, origem) {
+    const arquivo = input.files[0];
+    input.value = ""; // permite escolher o mesmo arquivo de novo
+    if (!arquivo) return;
     let b;
     try {
-      b = await api.escolherBackup(); // so valida; nada muda ainda
+      b = origem === "desktop" ? await api.lerArquivoDesktop(arquivo) : await api.lerArquivoBackup(arquivo);
     } catch (e) { return avisar(e.message, "erro"); }
-    if (!b) return; // cancelou
 
     const ultimo = b.ultimo_lancamento ? dataBR(b.ultimo_lancamento, { ano: true }) : "nenhum";
-    const ok = await confirmar("Restaurar backup", `
-      <b>${esc(b.nome)}</b><br>
-      <span class="nota">salvo em ${esc(dataBR(b.modificado.slice(0, 10), { ano: true }))} às ${esc(b.modificado.slice(11, 16))}</span>
+    const quando = b.gerado_em ? `<br><span class="nota">backup de ${esc(new Date(b.gerado_em).toLocaleString("pt-BR"))}</span>` : "";
+    const ok = await confirmar(origem === "desktop" ? "Importar do app antigo" : "Restaurar backup", `
+      <b>${esc(b.nome)}</b>${quando}
       <ul style="margin:12px 0;padding-left:18px;line-height:1.7">
         <li>${b.compras} lançamento(s) · o último foi feito em ${esc(ultimo)}</li>
         <li>${b.terceiros} terceiro(s) · ${b.caixinhas} caixinha(s)/fundo(s)</li>
       </ul>
-      Os dados atuais deste computador serão <b>substituídos</b> por esses.
-      Uma cópia do que está aqui agora fica guardada em <code>dados\\backups</code>.`,
-      { botao: "Restaurar" });
+      ${origem === "desktop"
+        ? "Os dados do arquivo passam a ser os desta conta."
+        : "Os dados atuais desta conta serão <b>substituídos</b> por esses. Isso não tem volta: se quiser guardar o que está aqui, baixe um backup antes."}`,
+      { botao: origem === "desktop" ? "Importar" : "Restaurar", perigo: origem !== "desktop" });
     if (!ok) return;
 
     try {
-      const r = await api.restaurarBackup(b.caminho);
+      await api.substituirPeloArquivo();
       await App.recarregarEstado();
-      App.ui = { mes: App.estado.mes_atual, aba: 1, fatura: null, donoFatura: null };
+      App.ui = { mes: App.estado.mes_atual, aba: App.estado.id_eu, fatura: null, donoFatura: null };
       App._desenharMes();
-      avisar("Backup restaurado. A cópia dos dados anteriores ficou em " + r.copia_seguranca);
+      avisar(origem === "desktop" ? "Dados importados." : "Backup restaurado.");
       App.ir("visao");
     } catch (e) { avisar(e.message, "erro"); }
+  },
+
+  _trocarSenha() {
+    Modal.abrir({
+      titulo: "Trocar senha",
+      largura: "440px",
+      corpo: `<div class="form">
+        <label class="campo"><span>Nova senha</span><input class="input" type="password" id="t-senha" autocomplete="new-password" minlength="8">
+          <small>Pelo menos 8 caracteres.</small></label>
+        <label class="campo"><span>Repita a senha</span><input class="input" type="password" id="t-confirma" autocomplete="new-password" minlength="8"></label>
+      </div>`,
+      aoSalvar: async () => {
+        const senha = $("#t-senha").value;
+        const problema = validarSenha(senha, $("#t-confirma").value);
+        if (problema) throw new Error(problema);
+        await Sessao.trocarSenha(senha);
+        avisar("Senha trocada.");
+      },
+    });
   },
 
   _formCategoria(c = null) {
