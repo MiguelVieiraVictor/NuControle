@@ -7,13 +7,21 @@
    (ferramentas/gerar-config.mjs) e de novo no navegador. */
 
 export function validarConfig({ supabaseUrl, supabaseChave } = {}) {
-  const url = String(supabaseUrl || "").trim().replace(/\/+$/, "");
+  const recebida = String(supabaseUrl || "").trim();
   const chave = String(supabaseChave || "").trim();
 
-  if (!/^https:\/\/[a-z0-9-]+\.supabase\.co$/.test(url)) {
-    throw new Error("SUPABASE_URL inválida. Use a Project URL do painel, ex.: https://abcdefgh.supabase.co");
+  if (!recebida) {
+    throw new Error("SUPABASE_URL vazia. Crie a variável em Settings → Secrets and variables → Actions, na aba Variables (não em Secrets).");
   }
-  if (!chave) throw new Error("SUPABASE_CHAVE vazia.");
+  // aceita a URL com caminho (ex.: .../rest/v1/), que o painel as vezes mostra
+  const m = /^https:\/\/([a-z0-9-]+\.supabase\.co)(\/.*)?$/i.exec(recebida);
+  if (!m) {
+    throw new Error(`SUPABASE_URL inválida: "${recebida}". Use a Project URL do painel, ex.: https://abcdefgh.supabase.co`);
+  }
+  const url = `https://${m[1].toLowerCase()}`;
+  if (!chave) {
+    throw new Error("SUPABASE_CHAVE vazia. Crie a variável em Settings → Secrets and variables → Actions, na aba Variables (não em Secrets).");
+  }
   if (chave.startsWith("sb_secret_")) {
     throw new Error("Essa é a chave SECRETA do Supabase. Use a chave publishable (sb_publishable_...). Nunca coloque a secreta no site.");
   }
