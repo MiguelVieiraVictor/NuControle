@@ -255,7 +255,7 @@ export function salvarCompra(tx, dados, compraId = null) {
 
   const campos = Object.fromEntries(CAMPOS_COMPRA.map((k) => [k, c[k]]));
   if (!compraId) {
-    compraId = tx.inserir("compra", { ...campos, criado_em: hoje() });
+    compraId = tx.inserir("compra", { ...campos, criado_em: hoje(), reserva_id: null });
   } else {
     tx.atualizar("compra", compraId, campos);
     for (const p of tx.onde("compra_parte", (p) => p.compra_id === compraId)) tx.apagar("compra_parte", p.id);
@@ -478,10 +478,13 @@ export function excluirReserva(tx, reservaId) {
   tx.apagar("reserva", reservaId);
 }
 
+// Movimentacoes que diminuem a reserva; as outras aumentam.
+export const MOVS_QUE_TIRAM = ["SAQUE", "DESVALORIZACAO"];
+
 export function saldoReserva(tx, reservaId, ate = "9999-12-31") {
   const r = existe(tx, "reserva", reservaId, "Caixinha");
   return tx.onde("mov_reserva", (m) => m.reserva_id === reservaId && m.data <= ate)
-    .reduce((s, m) => s + (m.tipo === "SAQUE" ? -m.valor : m.valor), r.saldo_inicial);
+    .reduce((s, m) => s + (MOVS_QUE_TIRAM.includes(m.tipo) ? -m.valor : m.valor), r.saldo_inicial);
 }
 
 export function criarMovReserva(tx, dados) {
@@ -503,6 +506,45 @@ export function criarMovReserva(tx, dados) {
     descricao: texto(dados, "descricao", "a descrição", false),
     criado_em: hoje(),
   });
+}
+
+function fundo(tx, reservaId) {
+  const r = existe(tx, "reserva", reservaId, "Fundo");
+  if (r.tipo !== "FUNDO") throw new ErroValidacao("Isso só vale para fundos.");
+  return r;
+}
+
+/** Ajuste do fundo: voce diz quanto ele vale na data e a diferenca para o
+    saldo ate ali vira uma VALORIZACAO ou DESVALORIZACAO. Nao mexe na conta. */
+export function ajustarFundo(tx, dados) {
+  const reservaId = dados.reserva_id;
+  fundo(tx, reservaId);
+  if ([null, undefined, ""].includes(dados.valor_atual)) throw new ErroValidacao("Informe quanto o fundo vale.");
+  const valorAtual = centavos(dados.valor_atual, "Valor atual", false);
+  const d = data(dados.data);
+  const dif = valorAtual - saldoReserva(tx, reservaId, d);
+  if (dif === 0) throw new ErroValidacao("O fundo já está com esse valor nessa data.");
+  return tx.inserir("mov_reserva", {
+    reserva_id: reservaId, data: d,
+    tipo: dif > 0 ? "VALORIZACAO" : "DESVALORIZACAO",
+    valor: Math.abs(dif),
+    descricao: texto(dados, "descricao", "a descrição", false),
+    criado_em: hoje(),
+  });
+}
+
+/** Dividendo do fundo: cai na conta como uma Entrada do mes, lembrando de
+    qual fundo veio. O valor do fundo nao muda. */
+export function registrarDividendo(tx, dados) {
+  const r = fundo(tx, dados.reserva_id);
+  const compraId = salvarCompra(tx, {
+    descricao: String(dados.descricao || "").trim() || `Dividendo ${r.nome}`.slice(0, 200),
+    fluxo: "ENTRADA", natureza: "AVULSO", meio: "DEBITO",
+    valor: dados.valor, data: dados.data,
+    categoria_id: dados.categoria_id || null,
+  });
+  tx.atualizar("compra", compraId, { reserva_id: r.id });
+  return compraId;
 }
 
 export function excluirMovReserva(tx, movId) {

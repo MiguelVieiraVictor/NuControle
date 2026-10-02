@@ -2997,6 +2997,8 @@
     "depositado": 30000,
     "sacado": 5000,
     "rendimentos": 0,
+    "valorizacao": 0,
+    "dividendos": 0,
     "saldo": 35000
    },
    {
@@ -3009,6 +3011,8 @@
     "depositado": 0,
     "sacado": 0,
     "rendimentos": 123,
+    "valorizacao": 0,
+    "dividendos": 0,
     "saldo": 123
    }
   ],

@@ -127,6 +127,12 @@ test("o que o site gera e aceito, e o banco fica igual ao site", async () => {
   c.escrever((tx) => regras.arquivarDono(tx, fulano, false));
   const r = c.escrever((tx) => regras.salvarReserva(tx, { nome: "Reserva", tipo: "CAIXINHA", meta: 10_00 }));
   c.escrever((tx) => regras.criarMovReserva(tx, { reserva_id: r, tipo: "RENDIMENTO", valor: 5, data: "2026-09-02" }));
+  const f = c.escrever((tx) => regras.salvarReserva(tx, { nome: "Fundo", tipo: "FUNDO", saldo_inicial: 100_00 }));
+  c.escrever((tx) => regras.ajustarFundo(tx, { reserva_id: f, valor_atual: 90_00, data: "2026-09-02" }));
+  c.escrever((tx) => regras.registrarDividendo(tx, { reserva_id: f, valor: 1_50, data: "2026-09-02" }));
+  await c.enviar();
+  // apagar o fundo: o Postgres solta o vinculo do dividendo, o site manda a atualizacao
+  c.escrever((tx) => regras.excluirReserva(tx, f));
   c.escrever((tx) => regras.pagarFatura(tx, { fatura_ref: "2026-09", valor: 10_00, data: "2026-09-03" }));
   await c.enviar();
 });

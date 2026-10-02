@@ -397,12 +397,13 @@ const Telas = {
   /* ============================================================ Caixinhas */
   async caixinhas(el) {
     const r = await api.reservas();
-    App.cabecalho("Caixinhas e fundos", "Guardar tira da conta; resgatar devolve; rendimento cresce sem tocar na conta",
+    App.cabecalho("Caixinhas e fundos", "Guardar/aportar tira da conta; resgatar e dividendo caem na conta; rendimento e ajuste mudam só o valor guardado",
       `<button class="btn" id="nova-reserva">${icone("mais")}Nova caixinha ou fundo</button>`);
     $("#nova-reserva").addEventListener("click", () => this._formReserva());
 
     const cards = r.reservas.map((x) => {
       const pct = x.meta ? Math.min(Math.round((x.saldo / x.meta) * 100), 100) : null;
+      const fundo = x.tipo === "FUNDO";
       return `<div class="card">
         <div class="reserva-topo">
           <div><span class="tag">${x.tipo === "FUNDO" ? "Fundo imobiliário" : "Caixinha"}</span>
@@ -415,25 +416,34 @@ const Telas = {
         <div class="reserva-saldo">${reais(x.saldo)}</div>
         <div class="reserva-info">
           <span>Aportado: ${reais(x.saldo_inicial + x.depositado - x.sacado)}</span>
-          <span>${x.tipo === "FUNDO" ? "Dividendos" : "Rendeu"}: ${reais(x.rendimentos)}</span>
+          ${fundo
+            ? `<span>Variação: ${reais(x.rendimentos + x.valorizacao, { sinal: true })}</span>
+               <span>Dividendos recebidos: ${reais(x.dividendos)}</span>`
+            : `<span>Rendeu: ${reais(x.rendimentos)}</span>`}
         </div>
         ${pct !== null ? `<div class="progresso" data-dica="${esc(`${pct}% da meta de ${reais(x.meta)}`)}"><div style="width:${pct}%"></div></div>
           <div class="nota" style="margin-top:6px">${pct}% de ${reais(x.meta)}</div>` : ""}
         <div class="reserva-acoes">
-          <button class="btn btn-p" data-mov="DEPOSITO" data-res="${x.id}">${x.tipo === "FUNDO" ? "Aportar" : "Guardar"}</button>
+          <button class="btn btn-p" data-mov="DEPOSITO" data-res="${x.id}">${fundo ? "Aportar" : "Guardar"}</button>
           <button class="btn btn-p" data-mov="SAQUE" data-res="${x.id}">Resgatar</button>
-          <button class="btn btn-p" data-mov="RENDIMENTO" data-res="${x.id}">${x.tipo === "FUNDO" ? "Dividendo" : "Rendimento"}</button>
+          ${fundo
+            ? `<button class="btn btn-p" data-mov="DIVIDENDO" data-res="${x.id}">Dividendo</button>
+               <button class="btn btn-p" data-mov="AJUSTE" data-res="${x.id}">Ajuste</button>`
+            : `<button class="btn btn-p" data-mov="RENDIMENTO" data-res="${x.id}">Rendimento</button>`}
         </div>
       </div>`;
     }).join("");
 
-    const rotMov = { DEPOSITO: "Guardado", SAQUE: "Resgatado", RENDIMENTO: "Rendimento" };
+    const rotMov = {
+      DEPOSITO: "Guardado", SAQUE: "Resgatado", RENDIMENTO: "Rendimento",
+      VALORIZACAO: "Valorizou", DESVALORIZACAO: "Desvalorizou", DIVIDENDO: "Dividendo (na conta)",
+    };
     const movs = r.movimentacoes.map((m) => `
       <tr><td class="data">${dataBR(m.data, { ano: true })}</td>
         <td class="desc">${esc(m.reserva_nome)}<small>${esc(m.descricao || "")}</small></td>
         <td><span class="tag">${rotMov[m.tipo]}</span></td>
-        <td class="num">${m.tipo === "SAQUE" ? "-" : "+"}${reais(m.valor)}</td>
-        <td class="acoes"><button class="btn-icone perigo" data-excluir-mov="${m.id}" data-dica="Excluir">${icone("lixo")}</button></td></tr>`).join("");
+        <td class="num">${["SAQUE", "DESVALORIZACAO"].includes(m.tipo) ? "-" : "+"}${reais(m.valor)}</td>
+        <td class="acoes"><button class="btn-icone perigo" ${m.tipo === "DIVIDENDO" ? "data-excluir-div" : "data-excluir-mov"}="${m.id}" data-dica="Excluir">${icone("lixo")}</button></td></tr>`).join("");
 
     el.innerHTML = `
       <div class="grade grade-tiles">
@@ -448,10 +458,12 @@ const Telas = {
       </div>`;
 
     el.addEventListener("click", async (ev) => {
-      const b = ev.target.closest("[data-mov],[data-editar-res],[data-excluir-res],[data-excluir-mov]");
+      const b = ev.target.closest("[data-mov],[data-editar-res],[data-excluir-res],[data-excluir-mov],[data-excluir-div]");
       if (!b) return;
       const res = (id) => r.reservas.find((x) => x.id === id);
       try {
+        if (b.dataset.mov === "DIVIDENDO") return this._formDividendo(res(b.dataset.res));
+        if (b.dataset.mov === "AJUSTE") return this._formAjuste(res(b.dataset.res));
         if (b.dataset.mov) return this._formMov(res(b.dataset.res), b.dataset.mov);
         if (b.dataset.editarRes) return this._formReserva(res(b.dataset.editarRes));
         if (b.dataset.excluirRes) {
@@ -460,6 +472,9 @@ const Telas = {
         } else if (b.dataset.excluirMov) {
           if (!(await confirmar("Excluir movimentação", "Remover esta movimentação?", { botao: "Excluir" }))) return;
           await api.excluirMovReserva(b.dataset.excluirMov);
+        } else if (b.dataset.excluirDiv) {
+          if (!(await confirmar("Excluir dividendo", "Remover este dividendo? A entrada dele sai da conta também.", { botao: "Excluir" }))) return;
+          await api.excluirCompra(b.dataset.excluirDiv);
         }
         avisar("Removido.");
         App.recarregar();
@@ -500,11 +515,11 @@ const Telas = {
   },
 
   _formMov(x, tipo) {
-    const titulos = { DEPOSITO: x.tipo === "FUNDO" ? "Aportar em" : "Guardar em", SAQUE: "Resgatar de", RENDIMENTO: x.tipo === "FUNDO" ? "Dividendo de" : "Rendimento de" };
+    const titulos = { DEPOSITO: x.tipo === "FUNDO" ? "Aportar em" : "Guardar em", SAQUE: "Resgatar de", RENDIMENTO: "Rendimento de" };
     const notas = {
-      DEPOSITO: "Sai do saldo da conta e entra aqui.",
+      DEPOSITO: x.tipo === "FUNDO" ? "Compra de cotas: sai do saldo da conta e entra no fundo." : "Sai do saldo da conta e entra aqui.",
       SAQUE: `Volta para o saldo da conta. Disponível: ${reais(x.saldo)}.`,
-      RENDIMENTO: "Cresce aqui sem mexer no saldo da conta.",
+      RENDIMENTO: `Digite quanto rendeu. Soma no valor da caixinha (hoje ${reais(x.saldo)}) sem mexer no saldo da conta.`,
     };
     Modal.abrir({
       titulo: `${titulos[tipo]} ${x.nome}`,
@@ -518,6 +533,59 @@ const Telas = {
       aoSalvar: async () => {
         await api.criarMovReserva({ reserva_id: x.id, tipo, valor: centavosDe($("#m-valor").value), data: $("#m-data").value, descricao: $("#m-desc").value });
         avisar("Movimentação registrada.");
+        App.recarregar();
+      },
+    });
+  },
+
+  _formDividendo(x) {
+    const cats = App.estado.categorias.filter((c) => c.ativa !== false);
+    const padrao = cats.find((c) => /dividendo|investimento/i.test(c.nome));
+    Modal.abrir({
+      titulo: `Dividendo de ${x.nome}`,
+      largura: "440px",
+      corpo: `<div class="form">
+        <label class="campo"><span>Valor</span><input class="input input-grande dinheiro" id="d-valor" inputmode="numeric" placeholder="0,00"></label>
+        <label class="campo"><span>Data</span><input class="input" type="date" id="d-data" value="${App.estado.hoje}"></label>
+        <label class="campo"><span>Categoria</span><select class="input" id="d-cat"><option value="">Sem categoria</option>
+          ${cats.map((c) => `<option value="${c.id}" ${padrao && c.id === padrao.id ? "selected" : ""}>${esc(c.nome)}</option>`).join("")}</select></label>
+        <label class="campo"><span>Descrição (opcional)</span><input class="input" id="d-desc" maxlength="200" placeholder="${esc(`Dividendo ${x.nome}`)}"></label>
+        <p class="nota">Cai no saldo da conta como uma Entrada do mês. O valor do fundo não muda.</p></div>`,
+      aoAbrir: (c) => mascararDinheiro($("#d-valor", c)),
+      aoSalvar: async () => {
+        await api.registrarDividendo({
+          reserva_id: x.id, valor: centavosDe($("#d-valor").value), data: $("#d-data").value,
+          categoria_id: $("#d-cat").value || null, descricao: $("#d-desc").value,
+        });
+        avisar("Dividendo registrado na conta.");
+        App.recarregar();
+      },
+    });
+  },
+
+  _formAjuste(x) {
+    Modal.abrir({
+      titulo: `Ajuste de ${x.nome}`,
+      largura: "440px",
+      corpo: `<div class="form">
+        <label class="campo"><span>Quanto o fundo vale agora</span><input class="input input-grande dinheiro" id="a-valor" inputmode="numeric" placeholder="${textoDinheiro(x.saldo)}">
+          <small id="a-dif">Hoje está em ${reais(x.saldo)}.</small></label>
+        <label class="campo"><span>Data</span><input class="input" type="date" id="a-data" value="${App.estado.hoje}"></label>
+        <label class="campo"><span>Descrição (opcional)</span><input class="input" id="a-desc" maxlength="200"></label>
+        <p class="nota">A diferença vira uma valorização ou desvalorização. Não mexe no saldo da conta.</p></div>`,
+      aoAbrir: (c) => {
+        const inp = $("#a-valor", c);
+        mascararDinheiro(inp);
+        inp.addEventListener("input", () => {
+          const dif = centavosDe(inp.value) - x.saldo;
+          $("#a-dif", c).textContent = !inp.value ? `Hoje está em ${reais(x.saldo)}.`
+            : dif === 0 ? "Igual ao valor atual." : `${dif > 0 ? "Valorizou" : "Desvalorizou"} ${reais(Math.abs(dif))}.`;
+        });
+      },
+      aoSalvar: async () => {
+        const v = $("#a-valor").value.trim();
+        await api.ajustarFundo({ reserva_id: x.id, valor_atual: v ? centavosDe(v) : "", data: $("#a-data").value, descricao: $("#a-desc").value });
+        avisar("Ajuste registrado.");
         App.recarregar();
       },
     });

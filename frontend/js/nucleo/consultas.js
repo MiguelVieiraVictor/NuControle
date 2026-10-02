@@ -207,17 +207,32 @@ export function conta(db, cfg, ref = null) {
 
 /* ------------------------------------------------------------------ caixinhas e fundos */
 
+/** Caixinhas e fundos com o saldo de cada um.
+
+    saldo = inicial + depositado - sacado + rendimentos + valorizacao.
+    `dividendos` e so informativo: o dividendo caiu na conta (uma compra
+    ENTRADA com reserva_id) e nao entra no saldo do fundo. Ele tambem aparece
+    nas movimentacoes, com tipo "DIVIDENDO" e o id da compra. */
 export function reservas(db) {
+  // dividendos: compra ENTRADA ligada ao fundo -> soma das ocorrencias
+  const dividendos = db.onde("compra", (c) => c.reserva_id).map((c) => ({
+    id: c.id, reserva_id: c.reserva_id, data: c.data, tipo: "DIVIDENDO", descricao: c.descricao,
+    valor: soma(db.onde("lancamento", (l) => l.compra_id === c.id), (l) => l.valor),
+  }));
   const lista = db.linhas("reserva")
     .sort((a, b) => comparar(a.tipo, b.tipo) || comparar(a.nome, b.nome))
     .map((r) => {
       const movs = db.onde("mov_reserva", (m) => m.reserva_id === r.id);
       const total = (t) => soma(movs.filter((m) => m.tipo === t), (m) => m.valor);
-      const [dep, saq, rend] = ["DEPOSITO", "SAQUE", "RENDIMENTO"].map(total);
-      return { ...r, depositado: dep, sacado: saq, rendimentos: rend, saldo: r.saldo_inicial + dep - saq + rend };
+      const [dep, saq, rend, val, desv] = ["DEPOSITO", "SAQUE", "RENDIMENTO", "VALORIZACAO", "DESVALORIZACAO"].map(total);
+      return {
+        ...r, depositado: dep, sacado: saq, rendimentos: rend, valorizacao: val - desv,
+        dividendos: soma(dividendos.filter((d) => d.reserva_id === r.id), (d) => d.valor),
+        saldo: r.saldo_inicial + dep - saq + rend + val - desv,
+      };
     });
   const nomes = new Map(db.linhas("reserva").map((r) => [r.id, r]));
-  const movimentacoes = db.linhas("mov_reserva")
+  const movimentacoes = [...db.linhas("mov_reserva"), ...dividendos]
     .sort((a, b) => comparar(b.data, a.data) || porId(b, a))
     .slice(0, 200)
     .map((m) => ({ ...m, reserva_nome: nomes.get(m.reserva_id).nome, reserva_tipo: nomes.get(m.reserva_id).tipo }));

@@ -314,6 +314,45 @@ describe("com conta", () => {
       assert.equal(consultas.reservas(c.banco).reservas[0].saldo, 50_00 + 300_00 - 100_00 + 1_23);
       assert.throws(() => mov("SAQUE", 999_00, "2026-09-08"), erro(/insuficiente/));
     });
+
+    test("fundo: ajuste muda so o fundo, dividendo cai na conta", () => {
+      const fid = c.escrever((tx) => regras.salvarReserva(tx, { nome: "MXRF11", tipo: "FUNDO" }));
+      const fundo = () => consultas.reservas(c.banco).reservas.find((r) => r.id === fid);
+      c.escrever((tx) => regras.criarMovReserva(tx, { reserva_id: fid, tipo: "DEPOSITO", valor: 500_00, data: "2026-09-05" }));
+      const ajuste = (valor_atual, data) => c.escrever((tx) => regras.ajustarFundo(tx, { reserva_id: fid, valor_atual, data }));
+
+      ajuste(530_00, "2026-09-06");
+      assert.equal(fundo().saldo, 530_00);
+      ajuste(510_00, "2026-09-07");
+      assert.equal(fundo().saldo, 510_00);
+      assert.equal(fundo().valorizacao, 10_00);
+      assert.throws(() => ajuste(510_00, "2026-09-08"), erro(/já está/));
+      assert.throws(() => ajuste("", "2026-09-08"), erro(/Informe/));
+      // ajuste numa data anterior compara com o saldo daquela data
+      ajuste(400_00, "2026-09-05");
+      assert.equal(fundo().saldo, 410_00);
+      assert.equal(saldo(), 1_000_00 - 500_00);
+
+      const div = c.escrever((tx) => regras.registrarDividendo(tx, { reserva_id: fid, valor: 4_20, data: "2026-09-10" }));
+      assert.equal(saldo(), 1_000_00 - 500_00 + 4_20);
+      assert.equal(fundo().saldo, 410_00);
+      assert.equal(fundo().dividendos, 4_20);
+      const m = consultas.mes(c.banco, "2026-09");
+      assert.ok(m.entradas.itens.some((l) => l.compra_id === div && l.valor === 4_20));
+      assert.equal(c.banco.obter("compra", div).descricao, "Dividendo MXRF11");
+      assert.equal(consultas.reservas(c.banco).movimentacoes[0].tipo, "DIVIDENDO");
+
+      // editar a entrada pelos gastos mantem o vinculo com o fundo
+      c.compra({ descricao: "Div set", fluxo: "ENTRADA", meio: "DEBITO", valor: 5_00, data: "2026-09-10" }, div);
+      assert.equal(fundo().dividendos, 5_00);
+      // apagar o fundo mantem o dinheiro na conta
+      c.escrever((tx) => regras.excluirReserva(tx, fid));
+      assert.equal(c.banco.obter("compra", div).reserva_id, null);
+      assert.equal(saldo(), 1_000_00 + 5_00);
+
+      const cx = c.escrever((tx) => regras.salvarReserva(tx, { nome: "Caixa", tipo: "CAIXINHA" }));
+      assert.throws(() => c.escrever((tx) => regras.registrarDividendo(tx, { reserva_id: cx, valor: 1_00, data: "2026-09-10" })), erro(/fundos/));
+    });
   });
 
   describe("telas", () => {

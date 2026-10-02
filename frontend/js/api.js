@@ -102,6 +102,8 @@ export function criarApi(servidor) {
     excluirReserva: (id) => escrever((tx) => regras.excluirReserva(tx, id)),
     criarMovReserva: (dados) => escrever((tx) => regras.criarMovReserva(tx, dados)),
     excluirMovReserva: (id) => escrever((tx) => regras.excluirMovReserva(tx, id)),
+    ajustarFundo: (dados) => escrever((tx) => regras.ajustarFundo(tx, dados)),
+    registrarDividendo: (dados) => escrever((tx) => regras.registrarDividendo(tx, dados)),
 
     /* -------------------------------------------------------- fatura e ajustes */
     pagarFatura: (dados) => escrever((tx) => regras.pagarFatura(tx, dados)),

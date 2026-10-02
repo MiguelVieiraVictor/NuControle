@@ -66,13 +66,16 @@ create table public.reserva (
 );
 
 -- DEPOSITO: conta -> reserva.  SAQUE: reserva -> conta.
--- RENDIMENTO: a reserva cresce sem tocar na conta (juros, dividendo).
+-- RENDIMENTO: a caixinha cresce sem tocar na conta (juros).
+-- VALORIZACAO / DESVALORIZACAO: o fundo passa a valer mais / menos, sem tocar na conta.
+-- (O dividendo do fundo cai na conta: e uma compra ENTRADA com reserva_id.)
 create table public.mov_reserva (
   id         uuid primary key,
   user_id    uuid not null default auth.uid() references auth.users (id) on delete cascade,
   reserva_id uuid not null,
   data       date not null,
-  tipo       text not null check (tipo in ('DEPOSITO', 'SAQUE', 'RENDIMENTO')),
+  tipo       text not null constraint mov_reserva_tipo_check
+               check (tipo in ('DEPOSITO', 'SAQUE', 'RENDIMENTO', 'VALORIZACAO', 'DESVALORIZACAO')),
   valor      bigint not null check (valor > 0),
   descricao  text not null default '' check (length(descricao) <= 200),
   criado_em  date not null default current_date,
@@ -100,12 +103,17 @@ create table public.compra (
   fim_ref         text check (fim_ref ~ '^\d{4}-(0[1-9]|1[0-2])$'),
   observacao      text not null default '' check (length(observacao) <= 200),
   criado_em       date not null default current_date,
+  reserva_id      uuid,  -- dividendo: o fundo que pagou esta entrada
   check (parcela_inicial between 1 and num_parcelas),
   unique (user_id, id),
   -- apagar a categoria deixa a compra "sem categoria" (so a coluna categoria_id vira null)
-  foreign key (user_id, categoria_id) references public.categoria (user_id, id) on delete set null (categoria_id)
+  foreign key (user_id, categoria_id) references public.categoria (user_id, id) on delete set null (categoria_id),
+  -- apagar o fundo mantem o dividendo na conta, so desfaz o vinculo
+  constraint compra_reserva_fk
+    foreign key (user_id, reserva_id) references public.reserva (user_id, id) on delete set null (reserva_id)
 );
 create index compra_categoria on public.compra (categoria_id);
+create index compra_reserva on public.compra (reserva_id);
 
 -- A divisao da compra entre donos. Soma sempre igual a compra.valor.
 create table public.compra_parte (

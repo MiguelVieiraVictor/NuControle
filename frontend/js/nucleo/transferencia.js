@@ -21,7 +21,7 @@ const COLUNAS = {
   reserva: ["nome", "tipo", "saldo_inicial", "meta", "criada_em"],
   mov_reserva: ["reserva_id", "data", "tipo", "valor", "descricao", "criado_em"],
   compra: ["descricao", "fluxo", "natureza", "meio", "categoria_id", "valor", "data", "num_parcelas",
-    "parcela_inicial", "dia", "inicio_ref", "fim_ref", "observacao", "criado_em"],
+    "parcela_inicial", "dia", "inicio_ref", "fim_ref", "observacao", "criado_em", "reserva_id"],
   compra_parte: ["compra_id", "dono_id", "valor"],
   lancamento: ["compra_id", "data", "ref", "valor", "fatura_ref", "parcela_num", "parcela_total"],
   lancamento_parte: ["lancamento_id", "dono_id", "valor"],
@@ -32,7 +32,7 @@ const COLUNAS = {
 // Colunas que apontam para outra tabela.
 const REFERENCIAS = {
   mov_reserva: { reserva_id: "reserva" },
-  compra: { categoria_id: "categoria" },
+  compra: { categoria_id: "categoria", reserva_id: "reserva" },
   compra_parte: { compra_id: "compra", dono_id: "dono" },
   lancamento: { compra_id: "compra" },
   lancamento_parte: { lancamento_id: "lancamento", dono_id: "dono" },

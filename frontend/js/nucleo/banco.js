@@ -25,6 +25,7 @@ export const TABELAS = [
 const FKS = [
   { tabela: "mov_reserva", coluna: "reserva_id", pai: "reserva", aoApagar: "cascata" },
   { tabela: "compra", coluna: "categoria_id", pai: "categoria", aoApagar: "nulo" },
+  { tabela: "compra", coluna: "reserva_id", pai: "reserva", aoApagar: "nulo" },
   { tabela: "compra_parte", coluna: "compra_id", pai: "compra", aoApagar: "cascata" },
   { tabela: "compra_parte", coluna: "dono_id", pai: "dono", aoApagar: "impedir" },
   { tabela: "lancamento", coluna: "compra_id", pai: "compra", aoApagar: "cascata" },
