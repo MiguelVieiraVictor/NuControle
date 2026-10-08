@@ -218,6 +218,14 @@ const Telas = {
       </div>`;
     }).join("");
 
+    // guardado em caixinha/fundo: sai pela conta, so no "Eu" e fora do filtro de credito
+    const r = m.reservas;
+    const guardado = d.id !== App.estado.id_eu || meio === "CREDITO" || !r.depositos.length ? "" : `
+      <div class="secao-nat">
+        <div class="secao-nat-topo"><h3>Caixinhas e fundos <small class="nota">· não soma no total</small></h3><span class="num">${reais(r.total_depositos)}</span></div>
+        ${this._tabelaMovsMes(r.depositos, "Depósito")}
+      </div>`;
+
     const cats = a.categorias.map((c) => ({ nome: c.nome, cor: c.cor, valor: c.valor }));
     return `
       <div class="grade grade-3">
@@ -226,7 +234,7 @@ const Telas = {
             <h2><span class="ponto" style="background:${esc(d.cor)}"></span> ${esc(d.nome)} — ${esc(m.rotulo)}</h2>
             <button class="btn btn-p" data-novo-dono="${d.id}">${icone("mais")}Lançar para ${esc(d.nome)}</button>
           </div>
-          ${secoes}
+          ${secoes}${guardado}
         </div>
         <div style="display:flex;flex-direction:column;gap:20px">
           <div class="grade grade-tiles" style="grid-template-columns:1fr">
@@ -257,7 +265,24 @@ const Telas = {
       ${linhas ? `<table class="tabela tabela-m"><thead><tr><th>Data</th><th>Descrição</th><th>Tipo</th><th class="num">Valor</th><th></th></tr></thead>
         <tbody>${linhas}</tbody><tfoot><tr><td colspan="3">Total</td><td class="num">${reais(m.entradas.total)}</td><td></td></tr></tfoot></table>`
         : `<div class="vazio">Nenhuma entrada neste mês.</div>`}
+      ${m.reservas.resgates.length ? `<div class="secao-nat" style="margin-top:16px">
+        <div class="secao-nat-topo"><h3>Resgates de caixinhas e fundos <small class="nota">· não soma no total</small></h3><span class="num">${reais(m.reservas.total_resgates)}</span></div>
+        ${this._tabelaMovsMes(m.reservas.resgates, "Resgate")}
+      </div>` : ""}
     </div>`;
+  },
+
+  /** Depositos/resgates do mes: so leitura, editados na tela de Caixinhas. */
+  _tabelaMovsMes(movs, verbo) {
+    const linhas = movs.map((x) => `
+      <tr class="${x.futuro ? "futuro" : ""}">
+        <td class="data">${dataBR(x.data)}</td>
+        <td class="desc">${verbo} ${x.reserva_tipo === "FUNDO" ? "fundo" : "caixinha"} ${esc(x.reserva_nome)}${x.descricao ? `<small>${esc(x.descricao)}</small>` : ""}</td>
+        <td>${tagMeio("DEBITO")}</td>
+        <td class="num"><b>${reais(x.valor)}</b></td>
+      </tr>`).join("");
+    return `<table class="tabela tabela-m"><thead><tr><th>Data</th><th>Descrição</th><th>Meio</th><th class="num">Valor</th></tr></thead>
+      <tbody>${linhas}</tbody></table>`;
   },
 
   /* ============================================================ Cartao */

@@ -313,6 +313,16 @@ describe("com conta", () => {
       assert.equal(saldo(), 1_000_00 - 200_00 - 300_00 + 100_00);
       assert.equal(consultas.reservas(c.banco).reservas[0].saldo, 50_00 + 300_00 - 100_00 + 1_23);
       assert.throws(() => mov("SAQUE", 999_00, "2026-09-08"), erro(/insuficiente/));
+
+      // no mes: aparecem (deposito nas saidas, resgate nas entradas) mas nao somam
+      mov("DEPOSITO", 10_00, "2026-10-02");
+      const m = consultas.mes(c.banco, "2026-09");
+      assert.deepEqual(m.reservas.depositos.map((x) => [x.valor, x.reserva_nome, x.reserva_tipo]), [[300_00, "Reserva", "CAIXINHA"]]);
+      assert.deepEqual(m.reservas.resgates.map((x) => x.valor), [100_00]);
+      assert.equal(m.reservas.total_depositos, 300_00);
+      assert.equal(m.total_saidas, 0);
+      assert.equal(m.entradas.total, 0);
+      assert.equal(consultas.mes(c.banco, "2026-10").reservas.total_depositos, 10_00);
     });
 
     test("fundo: ajuste muda so o fundo, dividendo cai na conta", () => {

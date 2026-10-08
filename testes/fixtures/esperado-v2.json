@@ -461,6 +461,12 @@
      }
     ],
     "total": 500000
+   },
+   "reservas": {
+    "depositos": [],
+    "total_depositos": 0,
+    "resgates": [],
+    "total_resgates": 0
    }
   },
   "fatura": {
@@ -1128,6 +1134,38 @@
      }
     ],
     "total": 500000
+   },
+   "reservas": {
+    "depositos": [
+     {
+      "id": 1,
+      "reserva_id": 1,
+      "criado_em": "2026-09-15",
+      "reserva_nome": "Reserva",
+      "reserva_tipo": "CAIXINHA",
+      "futuro": false,
+      "data": "2026-09-05",
+      "tipo": "DEPOSITO",
+      "valor": 30000,
+      "descricao": "guardei"
+     }
+    ],
+    "total_depositos": 30000,
+    "resgates": [
+     {
+      "id": 2,
+      "reserva_id": 1,
+      "criado_em": "2026-09-15",
+      "reserva_nome": "Reserva",
+      "reserva_tipo": "CAIXINHA",
+      "futuro": false,
+      "data": "2026-09-06",
+      "tipo": "SAQUE",
+      "valor": 5000,
+      "descricao": ""
+     }
+    ],
+    "total_resgates": 5000
    }
   },
   "fatura": {
@@ -1693,6 +1731,12 @@
      }
     ],
     "total": 500000
+   },
+   "reservas": {
+    "depositos": [],
+    "total_depositos": 0,
+    "resgates": [],
+    "total_resgates": 0
    }
   },
   "fatura": {
@@ -2297,6 +2341,12 @@
      }
     ],
     "total": 500000
+   },
+   "reservas": {
+    "depositos": [],
+    "total_depositos": 0,
+    "resgates": [],
+    "total_resgates": 0
    }
   },
   "fatura": {
@@ -2809,6 +2859,12 @@
      }
     ],
     "total": 500000
+   },
+   "reservas": {
+    "depositos": [],
+    "total_depositos": 0,
+    "resgates": [],
+    "total_resgates": 0
    }
   },
   "fatura": {

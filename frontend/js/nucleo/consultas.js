@@ -271,7 +271,11 @@ function porCategoria(itens, campoValor) {
     nas tres abas.
 
     `meio` ("CREDITO" ou "DEBITO") filtra as saidas: abas, grupos, totais e
-    categorias passam a contar so aquele meio. As entradas nao mudam. */
+    categorias passam a contar so aquele meio. As entradas nao mudam.
+
+    `reservas` lista o que foi guardado (DEPOSITO) e resgatado (SAQUE) no mes.
+    Sai e volta pela conta (debito/pix), mas e dinheiro seu mudando de lugar:
+    so aparece, nao soma em nenhum total. */
 export function mes(db, ref, meio = null) {
   cal.partes(ref);
   if (meio !== null && meio !== "CREDITO" && meio !== "DEBITO") throw new ErroValidacao("Meio de pagamento inválido.");
@@ -304,11 +308,24 @@ export function mes(db, ref, meio = null) {
     });
   }
 
+  const nomes = new Map(db.linhas("reserva").map((r) => [r.id, r]));
+  const movsMes = db.onde("mov_reserva", (m) => cal.refDe(m.data) === ref && ["DEPOSITO", "SAQUE"].includes(m.tipo))
+    .sort((a, b) => comparar(a.data, b.data) || porId(a, b))
+    .map((m) => ({
+      ...m, reserva_nome: nomes.get(m.reserva_id).nome, reserva_tipo: nomes.get(m.reserva_id).tipo, futuro: m.data > h,
+    }));
+  const depositos = movsMes.filter((m) => m.tipo === "DEPOSITO");
+  const resgates = movsMes.filter((m) => m.tipo === "SAQUE");
+
   return {
     ref,
     rotulo: cal.rotulo(ref),
     abas,
     total_saidas: soma(saidas, (l) => l.valor),
+    reservas: {
+      depositos, total_depositos: soma(depositos, (m) => m.valor),
+      resgates, total_resgates: soma(resgates, (m) => m.valor),
+    },
     entradas: {
       itens: entradas.map((l) => ({ ...l, futuro: l.data > h })),
       total: soma(entradas, (l) => l.valor),
