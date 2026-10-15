@@ -419,6 +419,56 @@ describe("com conta", () => {
       assert.equal(consultas.fatura(c.banco, "2026-09").status, "paga");
     });
 
+    test("ajuste de fatura: total do banco, diferenca toda do Eu", () => {
+      c.compra({ valor: 300_00, divisao: { modo: "igual", donos: [c.eu, fulano, genesys] } });
+      const ajustar = (total) => c.escrever((tx) => regras.ajustarFatura(tx, { fatura_ref: "2026-10", total }));
+      const f = () => consultas.fatura(c.banco, "2026-10");
+      const parte = (dono) => f().por_dono.find((g) => g.dono_id === dono).valor;
+
+      ajustar(295_50); // desconto de 4,50
+      assert.equal(f().total, 295_50);
+      assert.equal(f().compras, 300_00);
+      assert.equal(f().ajuste, -4_50);
+      assert.equal(parte(c.eu), 100_00 - 4_50);
+      assert.equal(parte(fulano), 100_00);
+      assert.equal(soma(f().por_dono.map((g) => g.valor)), f().total);
+      assert.equal(f().de_terceiros, 200_00);
+      // previsao e "a sair" usam o total ajustado; os gastos do mes nao mudam
+      assert.equal(consultas.conta(c.banco, Config.ler(c.banco), "2026-10").a_sair_fatura, 295_50);
+      assert.equal(consultas.mes(c.banco, "2026-09").total_saidas, 300_00);
+
+      // reajustar troca o mesmo registro (um por fatura); acrescimo tambem vale
+      ajustar(300_01);
+      assert.equal(c.banco.quantas("ajuste_fatura"), 1);
+      assert.equal(f().ajuste, 1);
+      // compra esquecida lancada depois: o total do banco fica, o ajuste diminui
+      c.compra({ valor: 10_00 });
+      assert.equal(f().total, 300_01);
+      assert.equal(f().ajuste, 1 - 10_00);
+      // pagar o total do banco quita
+      c.escrever((tx) => regras.pagarFatura(tx, { fatura_ref: "2026-10", valor: 300_01, data: "2026-10-03" }));
+      assert.equal(f().status, "paga");
+      // digitar o valor das compras remove o ajuste
+      ajustar(310_00);
+      assert.equal(c.banco.quantas("ajuste_fatura"), 0);
+      assert.equal(f().ajustada, false);
+      ajustar(305_00);
+      c.escrever((tx) => regras.removerAjusteFatura(tx, "2026-10"));
+      assert.equal(f().total, 310_00);
+      assert.throws(() => c.escrever((tx) => regras.removerAjusteFatura(tx, "2026-10")), erro(/não tem ajuste/));
+      assert.throws(() => ajustar(""), ErroValidacao);
+      // desconto total: fatura zerada, mas nao "vazia"
+      ajustar(0);
+      assert.equal(f().status, "paga");
+    });
+
+    test("ajuste numa fatura so com ele aparece na lista", () => {
+      c.escrever((tx) => regras.ajustarFatura(tx, { fatura_ref: "2026-12", total: 5_00 }));
+      const lista = consultas.faturas(c.banco);
+      assert.ok(lista.some((x) => x.ref === "2026-12" && x.total === 5_00));
+      assert.equal(consultas.fatura(c.banco, "2026-12").por_dono[0].dono_id, c.eu);
+    });
+
     test("fatura antes do controle nao e pendencia", () => {
       c.compra({ valor: 100_00, data: "2026-07-10" });
       assert.equal(consultas.fatura(c.banco, "2026-08").status, "anterior");

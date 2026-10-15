@@ -307,7 +307,7 @@ const Telas = {
 
     const partes = f.por_dono.map((p) => {
       const d = App.dono(p.dono_id);
-      return { id: p.dono_id, nome: d.nome, cor: d.cor, valor: p.valor, extra: `${p.itens} item(ns)` };
+      return { id: p.dono_id, nome: d.nome, cor: d.cor, valor: p.valor, extra: `${p.itens} item(ns)${p.ajuste ? " + ajuste" : ""}` };
     });
 
     const itens = sel ? f.itens.filter((l) => l.partes.some((p) => p.dono_id === sel)) : f.itens;
@@ -324,6 +324,13 @@ const Telas = {
       </tr>`;
     }).join("");
     const totalSel = sel ? f.por_dono.find((p) => p.dono_id === sel).valor : f.total;
+    // O ajuste e todo do "Eu": aparece no rodape de todos os itens e no do Eu.
+    const ajusteAqui = f.ajuste && (!sel || sel === App.estado.id_eu) ? f.ajuste : 0;
+    const col = sel ? 4 : 3;
+    const rodape = (ajusteAqui ? `
+      <tr class="sub"><td colspan="${col}">Compras</td><td class="num">${reais(totalSel - ajusteAqui)}</td><td></td></tr>
+      <tr class="sub"><td colspan="${col}">Ajuste da fatura${sel ? "" : " (seu)"}</td><td class="num">${ajusteAqui > 0 ? "+" : "−"} ${reais(Math.abs(ajusteAqui))}</td><td></td></tr>` : "")
+      + `<tr><td colspan="${col}">Total${sel ? ` de ${esc(nomeSel)}` : ""}</td><td class="num">${reais(totalSel)}</td><td></td></tr>`;
 
     const pagamentos = f.pagamentos.map((p) => `
       <tr><td class="data">${dataBR(p.data, { ano: true })}</td><td class="num">${reais(p.valor)}</td>
@@ -344,8 +351,12 @@ const Telas = {
           </div>
           <div style="text-align:right">
             <div class="total">${reais(f.total)}</div>
+            ${f.ajustada ? `<div class="nota">Compras ${reais(f.compras)} · ajuste ${f.ajuste > 0 ? "+" : "−"} ${reais(Math.abs(f.ajuste))}</div>` : ""}
             <div class="nota">${f.pago ? `Pago ${reais(f.pago)} · falta ${reais(f.restante)}` : "Nada pago ainda"}</div>
-            <button class="btn btn-primario btn-p" id="btn-pagar" style="margin-top:8px" ${f.total ? "" : "disabled"}>Registrar pagamento</button>
+            <div class="acoes-fatura">
+              <button class="btn btn-p" id="btn-ajustar" ${f.compras || f.ajustada ? "" : "disabled"}>Ajustar fatura</button>
+              <button class="btn btn-primario btn-p" id="btn-pagar" ${f.total ? "" : "disabled"}>Registrar pagamento</button>
+            </div>
           </div>
         </div>
       </div>
@@ -368,7 +379,7 @@ const Telas = {
         ${itens.length ? `<table class="tabela tabela-m"><thead><tr>
           <th>Data</th><th>Descrição</th><th>Dono(s)</th><th class="num">Valor</th>${sel ? `<th class="num">Parte de ${esc(nomeSel)}</th>` : ""}<th></th>
         </tr></thead><tbody>${linhas}</tbody>
-        <tfoot><tr><td colspan="${sel ? 4 : 3}">Total${sel ? ` de ${esc(nomeSel)}` : ""}</td><td class="num">${reais(totalSel)}</td><td></td></tr></tfoot></table>`
+        <tfoot>${rodape}</tfoot></table>`
         : `<div class="vazio">Nenhuma compra nesta fatura.</div>`}
       </div>`;
 
@@ -388,6 +399,7 @@ const Telas = {
     });
     $("#limpar-filtro", el)?.addEventListener("click", (ev) => { ev.preventDefault(); ui.donoFatura = null; App.recarregar(); });
     $("#btn-pagar", el).addEventListener("click", () => this._pagar(f));
+    $("#btn-ajustar", el).addEventListener("click", () => this._ajustarFatura(f));
     el.addEventListener("click", async (ev) => {
       const b = ev.target.closest("[data-excluir-pag]");
       if (!b) return;
@@ -414,6 +426,48 @@ const Telas = {
       aoSalvar: async () => {
         await api.pagarFatura({ fatura_ref: f.ref, valor: centavosDe($("#p-valor").value), data: $("#p-data").value });
         avisar("Pagamento registrado.");
+        App.recarregar();
+      },
+    });
+  },
+
+  _ajustarFatura(f) {
+    const remover = async () => {
+      try {
+        await api.removerAjusteFatura(f.ref);
+        Modal.fechar();
+        avisar("Ajuste removido.");
+        App.recarregar();
+      } catch (e) { Modal.erro(e.message); }
+    };
+    const explica = (total) => {
+      const dif = total - f.compras;
+      return dif === 0 ? `Igual às compras lançadas (${reais(f.compras)}): sem ajuste.`
+        : `As compras somam ${reais(f.compras)}: ${dif < 0 ? "desconto" : "acréscimo"} de ${reais(Math.abs(dif))}.`;
+    };
+    Modal.abrir({
+      titulo: `Ajustar fatura de ${f.rotulo}`,
+      largura: "440px",
+      corpo: `<div class="form">
+        <label class="campo"><span>Total que o banco cobrou</span>
+          <input class="input input-grande dinheiro" id="aj-total" inputmode="numeric" value="${textoDinheiro(f.total)}">
+          <small id="aj-dif">${explica(f.total)}</small></label>
+        <p class="nota">A diferença para as compras lançadas (desconto, arredondamento) entra na sua parte da fatura. Os gastos do mês não mudam.</p>
+      </div>`,
+      botoes: [
+        ...(f.ajustada ? [{ texto: "Remover ajuste", classe: "btn-perigo", esquerda: true, acao: remover }] : []),
+        { texto: "Cancelar", acao: "fechar" },
+        { texto: "Salvar", classe: "btn-primario", acao: "salvar" },
+      ],
+      aoAbrir: (c) => {
+        const inp = $("#aj-total", c);
+        mascararDinheiro(inp);
+        inp.addEventListener("input", () => { $("#aj-dif", c).textContent = explica(centavosDe(inp.value)); });
+      },
+      aoSalvar: async () => {
+        const v = $("#aj-total").value.trim();
+        const id = await api.ajustarFatura({ fatura_ref: f.ref, total: v ? centavosDe(v) : "" });
+        avisar(id ? "Fatura ajustada." : "Sem diferença: a fatura ficou com o valor das compras.");
         App.recarregar();
       },
     });

@@ -108,6 +108,8 @@ export function criarApi(servidor) {
     /* -------------------------------------------------------- fatura e ajustes */
     pagarFatura: (dados) => escrever((tx) => regras.pagarFatura(tx, dados)),
     excluirPagamento: (id) => escrever((tx) => regras.excluirPagamento(tx, id)),
+    ajustarFatura: (dados) => escrever((tx) => regras.ajustarFatura(tx, dados)),
+    removerAjusteFatura: (ref) => escrever((tx) => regras.removerAjusteFatura(tx, ref)),
     salvarConfig: (dados) => escrever((tx) => regras.salvarConfig(tx, dados)),
 
     /* -------------------------------------------------------- importar / backup */

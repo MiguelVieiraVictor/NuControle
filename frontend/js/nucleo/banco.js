@@ -19,6 +19,7 @@
 export const TABELAS = [
   "config", "categoria", "dono", "reserva", "mov_reserva", "compra",
   "compra_parte", "lancamento", "lancamento_parte", "fixo_gerado", "pagamento_fatura",
+  "ajuste_fatura",
 ];
 
 // Chaves estrangeiras e o que acontece com o filho quando o pai e apagado.

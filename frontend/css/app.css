@@ -195,6 +195,8 @@ svg { width: 18px; height: 18px; flex: none; }
 .tabela .acoes .btn-icone { opacity: .0; }
 .tabela tr:hover .acoes .btn-icone, .tabela .acoes .btn-icone:focus-visible { opacity: 1; }
 .tabela tfoot td { font-weight: 650; border-top: 1px solid var(--borda-forte); border-bottom: 0; }
+.tabela tfoot tr.sub td { font-weight: 450; color: var(--texto-2); }
+.tabela tfoot tr.sub + tr.sub td { border-top: 0; }
 .tabela .futuro td { color: var(--texto-3); }
 .data { color: var(--texto-2); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .desc { font-weight: 550; }
@@ -291,6 +293,7 @@ svg { width: 18px; height: 18px; flex: none; }
 
 .cab-fatura { display: flex; justify-content: space-between; gap: 20px; flex-wrap: wrap; align-items: flex-start; }
 .cab-fatura .total { font-size: 32px; font-weight: 750; letter-spacing: -1px; }
+.acoes-fatura { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; margin-top: 8px; }
 .datas-fatura { display: flex; gap: 22px; color: var(--texto-2); font-size: 13px; margin-top: 8px; flex-wrap: wrap; }
 .datas-fatura b { color: var(--texto); font-weight: 600; }
 
@@ -471,6 +474,7 @@ label.btn { position: relative; }
   .tile-valor { font-size: 19px; }
   .cab-fatura .total { font-size: 26px; }
   .cab-fatura > div:last-child { text-align: left !important; }
+  .acoes-fatura { justify-content: flex-start; }
   .card-topo { flex-wrap: wrap; }
   .barra-linha { grid-template-columns: minmax(70px, 120px) minmax(30px, 1fr) auto; gap: 8px; }
   .avisos { left: 16px; right: 16px; bottom: 84px; }
@@ -506,6 +510,8 @@ label.btn { position: relative; }
   .tabela-m td.data { order: 4; font-size: 12px; }
   .tabela-m td.acoes { order: 6; margin-left: auto; width: auto; }
   .tabela-m tfoot tr { justify-content: space-between; border-top: 1px solid var(--borda-forte); border-bottom: 0; }
-  .tabela-m tfoot td { border: 0; }
+  .tabela-m tfoot td, .tabela-m tfoot td.num { border: 0; order: 0; } /* rotulo antes do valor */
+  .tabela-m tfoot tr.sub { padding: 6px 2px; }
+  .tabela-m tfoot tr.sub + tr.sub { border-top: 0; }
   .tabela-m tbody tr:hover td { background: none; }
 }

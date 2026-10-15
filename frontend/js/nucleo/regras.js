@@ -118,6 +118,7 @@ export function contaVazia(db) {
   return db.quantas("compra") === 0
     && db.quantas("reserva") === 0
     && db.quantas("pagamento_fatura") === 0
+    && db.quantas("ajuste_fatura") === 0
     && db.quantas("dono", (d) => d.tipo !== "EU") === 0;
 }
 
@@ -567,6 +568,34 @@ export function pagarFatura(tx, dados) {
 export function excluirPagamento(tx, pagamentoId) {
   existe(tx, "pagamento_fatura", pagamentoId, "Pagamento");
   tx.apagar("pagamento_fatura", pagamentoId);
+}
+
+/** O total que o banco cobrou na fatura `fatura_ref` (desconto, arredondamento).
+
+    Guarda o TOTAL, nao a diferenca: a fatura passa a valer isso, e o ajuste
+    (total - soma das compras) e recalculado sempre. Uma compra esquecida
+    lancada depois ja estava dentro do total do banco, entao so diminui o
+    ajuste. Um ajuste por fatura; digitar o mesmo valor das compras remove. */
+export function ajustarFatura(tx, dados) {
+  const faturaRef = mesRef(String(dados.fatura_ref || ""), "Fatura inválida.");
+  const total = centavos(dados.total, "Total da fatura", false);
+  const atual = tx.onde("ajuste_fatura", (a) => a.fatura_ref === faturaRef)[0] || null;
+  const compras = tx.onde("lancamento", (l) => l.fatura_ref === faturaRef).reduce((s, l) => s + l.valor, 0);
+  if (total === compras) {
+    if (atual) tx.apagar("ajuste_fatura", atual.id);
+    return null;
+  }
+  if (atual) {
+    tx.atualizar("ajuste_fatura", atual.id, { total });
+    return atual.id;
+  }
+  return tx.inserir("ajuste_fatura", { fatura_ref: faturaRef, total, criado_em: hoje() });
+}
+
+export function removerAjusteFatura(tx, faturaRef) {
+  const atual = tx.onde("ajuste_fatura", (a) => a.fatura_ref === faturaRef)[0];
+  if (!atual) throw new ErroValidacao("Esta fatura não tem ajuste.");
+  tx.apagar("ajuste_fatura", atual.id);
 }
 
 /* ------------------------------------------------------------------ ajustes */

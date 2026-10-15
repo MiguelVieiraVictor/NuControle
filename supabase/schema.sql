@@ -179,6 +179,17 @@ create table public.pagamento_fatura (
 );
 create index pagamento_fatura_user on public.pagamento_fatura (user_id);
 
+-- O total que o banco cobrou numa fatura, quando difere da soma das compras
+-- (desconto, arredondamento). Um por fatura; a diferenca e toda do "Eu".
+create table public.ajuste_fatura (
+  id         uuid primary key,
+  user_id    uuid not null default auth.uid() references auth.users (id) on delete cascade,
+  fatura_ref text not null check (fatura_ref ~ '^\d{4}-(0[1-9]|1[0-2])$'),
+  total      bigint not null check (total >= 0),
+  criado_em  date not null default current_date,
+  unique (user_id, fatura_ref)
+);
+
 -- ------------------------------------------------------------------ seguranca
 
 do $$
@@ -187,7 +198,8 @@ declare
 begin
   foreach t in array array[
     'config', 'dono', 'categoria', 'reserva', 'mov_reserva', 'compra',
-    'compra_parte', 'lancamento', 'lancamento_parte', 'fixo_gerado', 'pagamento_fatura'
+    'compra_parte', 'lancamento', 'lancamento_parte', 'fixo_gerado', 'pagamento_fatura',
+    'ajuste_fatura'
   ] loop
     execute format('alter table public.%I enable row level security', t);
     execute format(
@@ -245,7 +257,8 @@ begin
     tabela := op->>'tabela';
     if tabela is null or not (tabela = any (array[
       'config', 'dono', 'categoria', 'reserva', 'mov_reserva', 'compra',
-      'compra_parte', 'lancamento', 'lancamento_parte', 'fixo_gerado', 'pagamento_fatura'
+      'compra_parte', 'lancamento', 'lancamento_parte', 'fixo_gerado', 'pagamento_fatura',
+      'ajuste_fatura'
     ])) then
       raise exception 'Tabela inválida: %', tabela using errcode = '22023';
     end if;

@@ -134,6 +134,9 @@ test("o que o site gera e aceito, e o banco fica igual ao site", async () => {
   // apagar o fundo: o Postgres solta o vinculo do dividendo, o site manda a atualizacao
   c.escrever((tx) => regras.excluirReserva(tx, f));
   c.escrever((tx) => regras.pagarFatura(tx, { fatura_ref: "2026-09", valor: 10_00, data: "2026-09-03" }));
+  c.escrever((tx) => regras.ajustarFatura(tx, { fatura_ref: "2026-10", total: 99_99 }));
+  await c.enviar();
+  c.escrever((tx) => regras.ajustarFatura(tx, { fatura_ref: "2026-10", total: 98_00 }));
   await c.enviar();
 });
 
@@ -203,6 +206,6 @@ test("conflito: nada e gravado e o erro e 40001", async () => {
 
 test("supabase/verificar.sql da tudo ok", async () => {
   const { rows } = await pg.query(readFileSync(new URL("../supabase/verificar.sql", import.meta.url), "utf-8"));
-  assert.ok(rows.length >= 11 * 3 + 2);
+  assert.ok(rows.length >= 12 * 3 + 2);
   assert.deepEqual(rows.filter((r) => !r.ok), []);
 });

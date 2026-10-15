@@ -27,6 +27,7 @@ const COLUNAS = {
   lancamento_parte: ["lancamento_id", "dono_id", "valor"],
   fixo_gerado: ["compra_id", "ref"],
   pagamento_fatura: ["fatura_ref", "data", "valor", "criado_em"],
+  ajuste_fatura: ["fatura_ref", "total", "criado_em"],
 };
 
 // Colunas que apontam para outra tabela.
@@ -145,6 +146,7 @@ export function lerBancoDesktop(SQL, bytes) {
       lancamento_parte: consulta("SELECT rowid AS id, * FROM lancamento_parte"),
       fixo_gerado: consulta("SELECT rowid AS id, * FROM fixo_gerado"),
       pagamento_fatura: tabelas.has("pagamento_fatura") ? consulta("SELECT * FROM pagamento_fatura") : [],
+      ajuste_fatura: [], // o app desktop nao tinha ajuste de fatura
     };
     const mapas = {};
     const novos = comIdsNovos(dados, mapas);

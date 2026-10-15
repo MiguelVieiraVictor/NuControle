@@ -73,6 +73,7 @@ function indice(db) {
     lancPorRef: agrupar(lancs, "ref"),
     lancPorFatura: agrupar(lancs.filter((l) => l.fatura_ref !== null), "fatura_ref"),
     pagPorFatura: agrupar(db.linhas("pagamento_fatura").sort((a, b) => comparar(a.data, b.data) || porId(a, b)), "fatura_ref"),
+    ajustePorFatura: new Map(db.linhas("ajuste_fatura").map((a) => [a.fatura_ref, a])),
   };
   cache.set(db, ix);
   return ix;
@@ -335,10 +336,10 @@ export function mes(db, ref, meio = null) {
 
 /* ------------------------------------------------------------------ fatura: resumo por dono */
 
-function status(total, pago, ciclo, cfg) {
+function status(total, pago, ciclo, cfg, ajustada) {
   const h = hoje();
-  if (total === 0 && pago === 0) return "vazia";
-  if (total > 0 && pago >= total) return "paga";
+  if (total === 0 && pago === 0 && !ajustada) return "vazia";
+  if ((total > 0 || ajustada) && pago >= total) return "paga";
   // Venceu antes de o controle comecar: ja foi paga fora do app, nao e pendencia.
   if (ciclo.vencimento < cfg.data_inicio) return "anterior";
   if (h < ciclo.inicio) return "futura";
@@ -347,17 +348,25 @@ function status(total, pago, ciclo, cfg) {
   return "fechada";
 }
 
+/** `compras` e a soma do que foi lancado; `total` e o que o banco cobra: o
+    mesmo valor, ou o total digitado no ajuste. `ajuste` = total - compras
+    (negativo num desconto) e e todo do "Eu". */
 function resumoFatura(db, cfg, ref) {
   const ix = indice(db);
-  const total = soma(ix.lancPorFatura.get(ref) || [], (l) => l.valor);
+  const compras = soma(ix.lancPorFatura.get(ref) || [], (l) => l.valor);
+  const ajustada = ix.ajustePorFatura.has(ref);
+  const total = ajustada ? ix.ajustePorFatura.get(ref).total : compras;
   const pago = soma(ix.pagPorFatura.get(ref) || [], (p) => p.valor);
   const ciclo = cfg.ciclo(ref);
   return {
     ...ciclo,
     total,
+    compras,
+    ajuste: total - compras,
+    ajustada,
     pago,
     restante: Math.max(total - pago, 0),
-    status: status(total, pago, ciclo, cfg),
+    status: status(total, pago, ciclo, cfg, ajustada),
   };
 }
 
@@ -376,6 +385,11 @@ export function fatura(db, ref) {
       g.valor += p.valor;
       g.itens += 1;
     }
+  }
+  if (resumo.ajuste) {
+    if (!porDono.has(ix.eu)) porDono.set(ix.eu, { dono_id: ix.eu, valor: 0, itens: 0 });
+    porDono.get(ix.eu).valor += resumo.ajuste;
+    porDono.get(ix.eu).ajuste = resumo.ajuste;
   }
   const resumoDonos = [...porDono.values()].sort((a, b) =>
     (a.dono_id !== ix.eu) - (b.dono_id !== ix.eu) || b.valor - a.valor);
@@ -400,6 +414,7 @@ export function faturas(db, incluir = null) {
   }
   for (const r of ix.lancPorFatura.keys()) refs.add(r);
   for (const r of ix.pagPorFatura.keys()) refs.add(r);
+  for (const r of ix.ajustePorFatura.keys()) refs.add(r);
   return [...refs].sort().map((r) => resumoFatura(db, cfg, r));
 }
 
